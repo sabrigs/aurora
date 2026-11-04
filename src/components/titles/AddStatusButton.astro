@@ -19,7 +19,10 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   data-title={title}
   data-poster-path={posterPath ?? ''}
 >
-  <button type="button" class="add-button" data-add hidden>+ Add</button>
+  <button type="button" class="add-button" data-add hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" /></svg>
+    <span>Add</span>
+  </button>
   <button type="button" class="status-badge" data-badge hidden aria-haspopup="dialog" aria-label={`${title} is in your lists. Open options`}>
     <span aria-hidden="true">✓</span>
   </button>
@@ -42,14 +45,23 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   }
 
   .add-button {
-    padding-inline: 14px;
-    border: 1px solid var(--color-border-strong);
-    background-color: var(--color-surface-raised);
-    color: var(--color-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px;
+    line-height: 1;
+    border: 0;
+    /* Translúcido: funciona sobre backdrops e sobre o fundo da página. */
+    background-color: #00000055;
+    color: #fff;
+    font-size: 1.0625rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 
   .add-button:hover {
-    background-color: var(--color-surface-hover);
+    background-color: #00000077;
   }
 
   .status-badge {
