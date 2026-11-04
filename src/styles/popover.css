@@ -83,6 +83,7 @@ dialog.popover[open] {
 }
 
 .menu-item {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -95,6 +96,7 @@ dialog.popover[open] {
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 

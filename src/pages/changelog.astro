@@ -1,0 +1,61 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { versions } from '../data/changelog';
+---
+
+<AppLayout fullWidth>
+	<article class="changelog">
+		<h1>Changelog</h1>
+
+		{versions.map((release) => (
+			<section class="release" aria-labelledby={`release-${release.version}`}>
+				<h2 id={`release-${release.version}`}>{release.version}</h2>
+				<ul>
+					{release.items.map((item) => <li>{item}</li>)}
+				</ul>
+			</section>
+		))}
+	</article>
+</AppLayout>
+
+<style>
+	/* Mesma coluna de conteúdo da página do título: 800px no máximo, centralizada. */
+	.changelog {
+		display: flex;
+		flex-direction: column;
+		gap: 32px;
+		width: 100%;
+		max-width: 800px;
+		margin-inline: auto;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: 1.75rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.release {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	h2 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	ul {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin: 0;
+		padding-left: 20px;
+		line-height: 1.5;
+		color: var(--color-text);
+	}
+</style>

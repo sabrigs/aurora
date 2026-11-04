@@ -1,19 +1,13 @@
 // Exportação genérica dos dados do usuário em JSON: perfil, streamings e listas com seus títulos.
 // Cada título traz o id e o tipo da TMDB API, para permitir importação em outras ferramentas.
 import { supabase } from '../supabase.js';
-import { getListItems, getListSummaries, getUserStreamings, type SystemKind } from './store';
+import { getListItems, getUserStreamings, type SystemKind } from './store';
 
 const LIST_KINDS: { kind: SystemKind; name: string }[] = [
   { kind: 'to_watch', name: 'To watch' },
   { kind: 'watched', name: 'Watched' },
   { kind: 'favorites', name: 'Favorites' },
 ];
-
-// Só há o que exportar se existir algum título em listas ou algum streaming salvo.
-export async function hasExportableData(): Promise<boolean> {
-  const [summaries, streamings] = await Promise.all([getListSummaries(), getUserStreamings()]);
-  return streamings.length > 0 || summaries.some((summary) => summary.count > 0);
-}
 
 export async function buildExport() {
   const { data: sessionData } = await supabase.auth.getSession();

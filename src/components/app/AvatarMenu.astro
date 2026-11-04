@@ -25,9 +25,12 @@ const providersForClient = providers.map((provider) => ({
 		<button type="button" class="menu-item" id="open-streamings">
 			<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 3l3 4 3-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><span>My streamings</span><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" class="chevron"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
 		</button>
-		<button type="button" class="menu-item" id="export-data" hidden>
+		<button type="button" class="menu-item" id="export-data">
 			<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M4 20h16" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export data</span>
 		</button>
+		<a class="menu-item" id="open-changelog" href="/changelog">
+			<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg><span>Changelog</span>
+		</a>
 		<button type="button" class="menu-item" id="sign-out">
 			<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 8l-4 4 4 4M6 12h10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign out</span>
 		</button>
@@ -95,8 +98,9 @@ const providersForClient = providers.map((provider) => ({
 		type StreamingRow,
 	} from '../../lib/lists/store';
 	import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
-	import { downloadExport, hasExportableData } from '../../lib/lists/export';
+	import { downloadExport } from '../../lib/lists/export';
 	import { brandName } from '../../lib/streaming/canonical';
+	import { clearAuthMemory } from '../../lib/auth/gate';
 
 	type Provider = { id: number; name: string; logoPath: string | null; logoUrl: string | null };
 
@@ -202,12 +206,6 @@ const providersForClient = providers.map((provider) => ({
 	avatarButton.addEventListener('click', () => {
 		showPanel('main');
 		openPopover(menu, avatarButton);
-		// "Export data" só aparece quando há dados para exportar.
-		hasExportableData()
-			.then((hasData) => {
-				document.getElementById('export-data')!.hidden = !hasData;
-			})
-			.catch((error) => console.error(error));
 	});
 
 	enableLightDismiss(menu);
@@ -233,8 +231,12 @@ const providersForClient = providers.map((provider) => ({
 		}
 	});
 
+	// O menu persiste entre navegações: fecha antes de abrir o Changelog.
+	document.getElementById('open-changelog')?.addEventListener('click', () => menu.close());
+
 	document.getElementById('sign-out')?.addEventListener('click', async () => {
 		await supabase.auth.signOut();
+		clearAuthMemory();
 		window.location.replace('/login');
 	});
 
