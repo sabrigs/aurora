@@ -276,11 +276,31 @@ const logoBase = 'https://image.tmdb.org/t/p/w92';
 		}
 
 		.streaming-option input {
-			width: 20px;
-			height: 20px;
+			/* Mesmo visual do checkbox dos dropdowns (.check-box em popover.css). */
+			appearance: none;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 22px;
+			width: 22px;
+			height: 22px;
 			margin: 0;
-			accent-color: var(--color-selected);
+			border-radius: 6px;
+			border: 1.5px solid var(--color-border-strong);
+			background-color: var(--color-surface-hover);
+			font-size: 0.8125rem;
+			font-weight: 700;
+			color: #fff;
 			cursor: pointer;
+		}
+
+		.streaming-option input:checked {
+			background-color: var(--color-selected);
+			border-color: var(--color-selected);
+		}
+
+		.streaming-option input:checked::before {
+			content: '✓';
 		}
 
 		.actions {
