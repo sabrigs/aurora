@@ -5,14 +5,42 @@ import { versions } from '../data/changelog';
 
 <AppLayout fullWidth>
 	<article class="changelog">
-		<h1>Changelog</h1>
+		<header class="page-head">
+			<h1>Changelog</h1>
+			<p>New features, improvements and fixes in Aurora.</p>
+		</header>
 
 		{versions.map((release) => (
 			<section class="release" aria-labelledby={`release-${release.version}`}>
-				<h2 id={`release-${release.version}`}>{release.version}</h2>
-				<ul>
-					{release.items.map((item) => <li>{item}</li>)}
-				</ul>
+				<div class="meta">
+					<h2 id={`release-${release.version}`}>{release.version}</h2>
+					<time datetime={release.date}>
+						{new Date(`${release.date}T12:00:00`).toLocaleDateString('en-US', {
+							month: 'long',
+							day: 'numeric',
+							year: 'numeric',
+						})}
+					</time>
+					<span class="cost" title="Approximate Claude API cost to vibe code this version">{release.cost} · {release.model}</span>
+				</div>
+				<div class="body">
+					<h3>{release.headline}</h3>
+					<p class="intro">{release.intro}</p>
+
+					{release.sections.map((section) => (
+						<div class="group">
+							<h4 data-kind={section.kind}>{section.kind}</h4>
+							<ul>
+								{section.items.map((item) => (
+									<li>
+										<strong>{item.title}</strong>
+										<span>{item.text}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
+				</div>
 			</section>
 		))}
 	</article>
@@ -23,23 +51,39 @@ import { versions } from '../data/changelog';
 	.changelog {
 		display: flex;
 		flex-direction: column;
-		gap: 32px;
+		gap: 40px;
 		width: 100%;
 		max-width: 800px;
 		margin-inline: auto;
 	}
 
-	h1 {
-		margin: 0;
+	.page-head h1 {
+		margin: 0 0 4px;
 		font-size: 1.75rem;
 		font-weight: 600;
 		color: var(--color-text);
 	}
 
+	.page-head p {
+		margin: 0;
+		color: var(--color-text-muted);
+	}
+
 	.release {
+		display: grid;
+		grid-template-columns: 140px 1fr;
+		gap: 24px;
+		padding-top: 32px;
+		border-top: 1px solid var(--color-border);
+	}
+
+	.meta {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 4px;
+		align-self: start;
+		position: sticky;
+		top: 88px;
 	}
 
 	h2 {
@@ -49,13 +93,88 @@ import { versions } from '../data/changelog';
 		color: var(--color-text);
 	}
 
+	.cost {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+	}
+
+	time {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	.body {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	h3 {
+		margin: 0;
+		font-family: var(--font-serif);
+		font-size: 1.75rem;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--color-text);
+	}
+
+	.intro {
+		margin: -12px 0 0;
+		line-height: 1.6;
+		color: var(--color-text-muted);
+	}
+
+	.group {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	h4 {
+		align-self: flex-start;
+		margin: 0;
+		padding: 2px 10px;
+		border-radius: 999px;
+		background: var(--color-surface-raised);
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+
 	ul {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 12px;
 		margin: 0;
-		padding-left: 20px;
+		padding: 0;
+		list-style: none;
+	}
+
+	li {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
 		line-height: 1.5;
 		color: var(--color-text);
+	}
+
+	li span {
+		color: var(--color-text-muted);
+	}
+
+	@media (max-width: 640px) {
+		.release {
+			grid-template-columns: 1fr;
+			gap: 12px;
+		}
+
+		.meta {
+			position: static;
+			flex-direction: row;
+			align-items: baseline;
+			gap: 12px;
+		}
 	}
 </style>
