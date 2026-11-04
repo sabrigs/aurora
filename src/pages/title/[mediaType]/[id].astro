@@ -1,7 +1,8 @@
 ---
 import AppLayout from '../../../layouts/AppLayout.astro';
 import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
-import { getTitleDetails, isInBrazilTheaters, type TitleDetails } from '../../../lib/tmdb/titles';
+import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
+import { cardMeta } from '../../../lib/tmdb/format';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
 import type { MediaType } from '../../../lib/tmdb/client';
@@ -26,6 +27,26 @@ try {
 	return Astro.redirect('/');
 }
 
+// Títulos do mesmo diretor (filme) ou criador (série). Sem diretor na TMDB, a seção some.
+const related: RelatedTitle[] = details.director
+	? await getSameDirectorTitles(details.mediaType, details.director.id, details.id).catch(() => [])
+	: [];
+const relatedHeading = details.mediaType === 'movie' ? 'From the same director' : 'From the same creator';
+
+// Ainda não lançado: data de estreia no Brasil, ou a global, ou (sem datas) o status da TMDB.
+const today = new Date().toISOString().slice(0, 10);
+const releaseDate = details.brazilReleaseDate ?? details.releaseDate;
+const notReleased = releaseDate
+	? releaseDate > today
+	: ['Planned', 'In Production', 'Post Production', 'Rumored'].includes(details.status);
+const formatDate = (date: string) =>
+	new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const unreleasedMessage = !releaseDate
+	? 'Not released yet.'
+	: details.brazilReleaseDate
+		? `Not released yet. Coming to theaters in Brazil on ${formatDate(details.brazilReleaseDate)}.`
+		: `Not released yet. Expected on ${formatDate(releaseDate)}.`;
+
 const category = details.mediaType === 'movie' ? 'Movie' : 'Series';
 const duration = details.runtime
 	? details.runtime >= 60
@@ -34,7 +55,7 @@ const duration = details.runtime
 	: null;
 const genre = details.genres.slice(0, 2).join(', ') || null;
 const rating = details.voteAverage > 0 ? `★ ${details.voteAverage.toFixed(1)}` : null;
-const metadata = [category, duration, genre, rating].filter(Boolean).join(' · ');
+const metadata = [category, duration, genre, rating].filter(Boolean).join(' • ');
 
 const backdrop = details.backdropPath ? `https://image.tmdb.org/t/p/w1280${details.backdropPath}` : null;
 const poster = posterUrl(details.posterPath, 'w342');
@@ -50,42 +71,65 @@ const poster = posterUrl(details.posterPath, 'w342');
 					</span>
 					<span class="back-label">Back</span>
 				</a>
-				<AddStatusButton tmdbId={details.id} mediaType={details.mediaType} title={details.title} posterPath={details.posterPath} />
 			</div>
 
-			<div class="hero-text">
-				<h1>{details.title}</h1>
-				<p class="metadata">{metadata}</p>
+			<div class="hero-inner">
+				{poster && <img class="hero-poster" src={poster} alt="" />}
+				<div class="hero-text">
+					<h1>{details.title}</h1>
+					<p class="metadata">{metadata}</p>
+					<AddStatusButton tmdbId={details.id} mediaType={details.mediaType} title={details.title} posterPath={details.posterPath} />
+				</div>
 			</div>
 		</div>
 
 		<div class="content">
-			{(inTheaters || providers.length > 0) && (
-				<section class="block" aria-labelledby="available-on">
-					<h2 id="available-on">Available on</h2>
-					{inTheaters ? (
-						<ul class="providers">
-							<li class="theater-chip">In theaters</li>
-						</ul>
-					) : (
-						<ul class="providers">
-							{providers.map((provider) => (
-								<li>
-									{provider.logoPath ? (
-										<img src={logoUrl(provider.logoPath, 'w92') ?? ''} alt="" width="40" height="40" />
-									) : null}
-									<span>{provider.name}</span>
-								</li>
-							))}
-						</ul>
-					)}
-				</section>
-			)}
+			<section class="block" aria-labelledby="available-on">
+				<h2 id="available-on">Available on</h2>
+				{inTheaters ? (
+					<ul class="providers">
+						<li class="theater-chip">In theaters</li>
+					</ul>
+				) : providers.length > 0 ? (
+					<ul class="providers">
+						{providers.map((provider) => (
+							<li>
+								{provider.logoPath ? (
+									<img src={logoUrl(provider.logoPath, 'w92') ?? ''} alt="" width="40" height="40" />
+								) : null}
+								<span>{provider.name}</span>
+							</li>
+						))}
+					</ul>
+				) : notReleased ? (
+					<p class="unavailable">{unreleasedMessage}</p>
+				) : (
+					<p class="unavailable">Not available on streaming in Brazil.</p>
+				)}
+			</section>
 
 			{details.overview && (
 				<section class="block" aria-labelledby="about">
 					<h2 id="about">About</h2>
 					<p class="about">{details.overview}</p>
+				</section>
+			)}
+
+			{details.trailers.length > 0 && (
+				<section class="block" aria-labelledby="trailers">
+					<h2 id="trailers">Trailers</h2>
+					<ul class="trailers">
+						{details.trailers.map((trailer) => (
+							<li>
+								<button type="button" class="trailer" data-trailer={trailer.key} data-name={trailer.name} aria-label={`Play ${trailer.name}`}>
+									<img src={`https://i.ytimg.com/vi/${trailer.key}/hqdefault.jpg`} alt="" loading="lazy" />
+									<span class="trailer-play" aria-hidden="true">
+										<svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+									</span>
+								</button>
+							</li>
+						))}
+					</ul>
 				</section>
 			)}
 
@@ -103,8 +147,36 @@ const poster = posterUrl(details.posterPath, 'w342');
 					</ul>
 				</section>
 			)}
+
+			{related.length > 0 && (
+				<section class="block" aria-labelledby="related">
+					<h2 id="related">{relatedHeading}</h2>
+					<div class="related">
+						{related.map((item) => (
+							<article class="title-card" style={item.backdropPath || item.posterPath ? `background-image: url("${item.backdropPath ? `https://image.tmdb.org/t/p/w780${item.backdropPath}` : posterUrl(item.posterPath, 'w500')}");` : undefined}>
+								<a class="title-card__cover" href={`/title/${item.mediaType}/${item.id}`} aria-label={item.title}></a>
+								<div class="title-card__info">
+									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" />}
+									<div class="title-card__text">
+										<h3 class="title-card__title">{item.title}</h3>
+										<p class="title-card__meta">{cardMeta(item)}</p>
+									</div>
+								</div>
+								<AddStatusButton tmdbId={item.id} mediaType={item.mediaType} title={item.title} posterPath={item.posterPath} />
+							</article>
+						))}
+					</div>
+				</section>
+			)}
 		</div>
 	</article>
+
+	<dialog id="trailer-modal" class="trailer-modal" aria-label="Trailer">
+		<button type="button" class="trailer-close" aria-label="Close trailer">
+			<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" /></svg>
+		</button>
+		<div class="trailer-frame"></div>
+	</dialog>
 </AppLayout>
 
 <script>
@@ -114,6 +186,30 @@ const poster = posterUrl(details.posterPath, 'w342');
 	document.addEventListener('astro:page-load', () => {
 		const back = document.querySelector<HTMLAnchorElement>('[data-back]');
 		if (back) bindBackLink(back);
+
+		// Trailer: abre o vídeo do YouTube num overlay por cima da página.
+		const modal = document.getElementById('trailer-modal') as HTMLDialogElement | null;
+		if (!modal) return;
+		const frame = modal.querySelector<HTMLElement>('.trailer-frame')!;
+
+		document.querySelectorAll<HTMLButtonElement>('[data-trailer]').forEach((button) => {
+			button.addEventListener('click', () => {
+				const iframe = document.createElement('iframe');
+				iframe.src = `https://www.youtube-nocookie.com/embed/${button.dataset.trailer}?autoplay=1&rel=0`;
+				iframe.title = button.dataset.name ?? 'Trailer';
+				iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+				iframe.allowFullscreen = true;
+				frame.replaceChildren(iframe);
+				modal.showModal();
+			});
+		});
+
+		// Fecha com o botão, Esc (nativo) ou clique fora; o vídeo para ao remover o iframe.
+		modal.querySelector('.trailer-close')!.addEventListener('click', () => modal.close());
+		modal.addEventListener('click', (event) => {
+			if (event.target === modal) modal.close();
+		});
+		modal.addEventListener('close', () => frame.replaceChildren());
 	});
 </script>
 
@@ -159,9 +255,33 @@ const poster = posterUrl(details.posterPath, 'w342');
 		justify-content: space-between;
 	}
 
-	.hero-text {
+	/* Pôster + texto alinhados à coluna de conteúdo (800px). */
+	.hero-inner {
 		position: relative;
 		z-index: 1;
+		display: flex;
+		align-items: flex-end;
+		gap: 24px;
+		width: 100%;
+		max-width: 800px;
+		margin-inline: auto;
+	}
+
+	.hero-poster {
+		flex: 0 0 auto;
+		width: 160px;
+		aspect-ratio: 2 / 3;
+		border-radius: 4px;
+		object-fit: cover;
+		background-color: var(--color-surface-raised);
+	}
+
+	.hero-text {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+		min-width: 0;
 	}
 
 	.back {
@@ -185,7 +305,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 	}
 
 	h1 {
-		margin: 0 0 8px;
+		margin: 0;
 		font-size: 2.25rem;
 		font-weight: 700;
 		color: #fff;
@@ -202,7 +322,9 @@ const poster = posterUrl(details.posterPath, 'w342');
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
-		max-width: 1000px;
+		width: 100%;
+		max-width: 800px;
+		margin-inline: auto;
 	}
 
 	.block {
@@ -241,6 +363,11 @@ const poster = posterUrl(details.posterPath, 'w342');
 		border-radius: 10px;
 	}
 
+	.unavailable {
+		margin: 0;
+		color: var(--color-text-muted);
+	}
+
 	.theater-chip {
 		padding: 8px 14px;
 		border-radius: 999px;
@@ -274,8 +401,8 @@ const poster = posterUrl(details.posterPath, 'w342');
 
 	.cast-photo {
 		display: block;
-		aspect-ratio: 2 / 3;
-		border-radius: 12px;
+		height: 180px;
+		border-radius: 4px;
 		background-color: var(--color-surface-raised);
 		background-image: linear-gradient(180deg, var(--color-surface-hover), var(--color-surface-raised));
 		background-size: cover;
@@ -299,6 +426,126 @@ const poster = posterUrl(details.posterPath, 'w342');
 		color: var(--color-text-muted);
 	}
 
+	.trailers {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.trailer {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		overflow: hidden;
+		background-color: var(--color-surface-raised);
+		cursor: pointer;
+	}
+
+	.trailer img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.trailer-play {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		border-radius: 999px;
+		transform: translate(-50%, -50%);
+		background-color: #00000066;
+		color: #fff;
+		backdrop-filter: blur(8px);
+		transition: background-color 150ms ease;
+	}
+
+	.trailer:hover .trailer-play {
+		background-color: #00000099;
+	}
+
+	/* Cards do mesmo diretor: 2 colunas na coluna de 800px, 1 no mobile. */
+	.related {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px;
+	}
+
+	/* Overlay do trailer, no mesmo estilo dos dropdowns (borda, raio e botão translúcido). */
+	.trailer-modal {
+		width: min(960px, calc(100vw - 32px));
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-text);
+		overflow: visible;
+	}
+
+	.trailer-modal::backdrop {
+		background: #000000b3;
+		backdrop-filter: blur(4px);
+	}
+
+	.trailer-modal[open] {
+		animation: trailer-in 150ms ease-out;
+	}
+
+	.trailer-close {
+		position: absolute;
+		top: -52px;
+		right: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border: 0;
+		border-radius: 999px;
+		background-color: #ffffff1a;
+		color: #fff;
+		backdrop-filter: blur(8px);
+		cursor: pointer;
+	}
+
+	.trailer-close:hover {
+		background-color: #ffffff33;
+	}
+
+	.trailer-frame {
+		aspect-ratio: 16 / 9;
+		border: 1px solid var(--color-border);
+		border-radius: 16px;
+		overflow: hidden;
+		background-color: #000;
+	}
+
+	.trailer-frame :global(iframe) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+
+	@keyframes trailer-in {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+	}
+
 	@media (max-width: 1023px) {
 		.cast {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -312,6 +559,18 @@ const poster = posterUrl(details.posterPath, 'w342');
 
 		h1 {
 			font-size: 1.75rem;
+		}
+
+		.hero-poster {
+			width: 100px;
+		}
+
+		.hero-inner {
+			gap: 16px;
+		}
+
+		.related {
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 </style>

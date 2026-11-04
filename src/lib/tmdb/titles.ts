@@ -133,11 +133,29 @@ export async function searchTitles(query: string, page = 1): Promise<TitlePage> 
   };
 }
 
+export interface Trailer {
+  key: string; // id do vídeo no YouTube
+  name: string;
+}
+
+export interface Director {
+  id: number;
+  name: string;
+}
+
 export interface TitleDetails extends TitleSummary {
   genres: string[];
   runtime: number | null;
   imdbId: string | null;
   cast: { name: string; character: string; profilePath: string | null }[];
+  trailers: Trailer[];
+  // Filme: diretor. Série: criador. Nulo quando a TMDB não informa.
+  director: Director | null;
+  // Lançamento: status da TMDB (ex.: "Released", "Post Production"), data global e, para filmes,
+  // a data de estreia nos cinemas do Brasil (YYYY-MM-DD).
+  status: string;
+  releaseDate: string | null;
+  brazilReleaseDate: string | null;
 }
 
 interface RawDetails extends RawTitle {
@@ -146,13 +164,47 @@ interface RawDetails extends RawTitle {
   episode_run_time?: number[];
   imdb_id?: string | null;
   external_ids?: { imdb_id: string | null };
-  credits?: { cast: { name: string; character: string; profile_path: string | null }[] };
+  credits?: {
+    cast: { name: string; character: string; profile_path: string | null }[];
+    crew: { id: number; name: string; job: string }[];
+  };
+  created_by?: { id: number; name: string }[];
+  status?: string;
+  release_date?: string;
+  first_air_date?: string;
+  release_dates?: { results: { iso_3166_1: string; release_dates: { type: number; release_date: string }[] }[] };
+  videos?: { results: { key: string; name: string; site: string; type: string; official: boolean }[] };
+}
+
+// Primeira estreia em cinemas (tipos 2 e 3) no Brasil, se a TMDB tiver.
+function brazilTheatricalDate(results: NonNullable<RawDetails['release_dates']>['results']): string | null {
+  const brazil = results.find((country) => country.iso_3166_1 === 'BR');
+  const dates = (brazil?.release_dates ?? [])
+    .filter((release) => release.type === 2 || release.type === 3)
+    .map((release) => release.release_date.slice(0, 10))
+    .sort();
+  return dates[0] ?? null;
+}
+
+const MAX_TRAILERS = 4;
+
+// Trailers do YouTube (oficiais primeiro). Sem trailer, usa teasers.
+function pickTrailers(videos: NonNullable<RawDetails['videos']>['results']): Trailer[] {
+  const youtube = videos.filter((video) => video.site === 'YouTube');
+  const trailers = youtube.filter((video) => video.type === 'Trailer');
+  const chosen = trailers.length > 0 ? trailers : youtube.filter((video) => video.type === 'Teaser');
+  return [...chosen]
+    .sort((a, b) => Number(b.official) - Number(a.official))
+    .slice(0, MAX_TRAILERS)
+    .map((video) => ({ key: video.key, name: video.name }));
 }
 
 // Detalhes do título (Lista de metadados, sinopse e elenco).
 export async function getTitleDetails(mediaType: MediaType, id: number): Promise<TitleDetails> {
   const raw = await tmdbFetch<RawDetails>(`/${mediaType}/${id}`, {
-    append_to_response: 'credits,external_ids',
+    // release_dates só existe para filmes.
+    append_to_response: mediaType === 'movie' ? 'credits,external_ids,videos,release_dates' : 'credits,external_ids,videos',
+    include_video_language: 'en,null',
   });
 
   return {
@@ -165,7 +217,60 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
       character: member.character,
       profilePath: member.profile_path,
     })),
+    status: raw.status ?? '',
+    releaseDate: raw.release_date || raw.first_air_date || null,
+    brazilReleaseDate: brazilTheatricalDate(raw.release_dates?.results ?? []),
+    trailers: pickTrailers(raw.videos?.results ?? []),
+    director:
+      mediaType === 'movie'
+        ? (raw.credits?.crew.find((member) => member.job === 'Director') ?? null)
+        : (raw.created_by?.[0] ?? null),
   };
+}
+
+export interface RelatedTitle extends TitleSummary {
+  runtime: number | null;
+  genre: string | null;
+}
+
+interface RawCredit extends RawTitle {
+  job: string;
+  popularity: number;
+}
+
+const MAX_RELATED = 6;
+
+// Outros títulos do mesmo diretor (filme) ou criador (série), mais populares primeiro.
+export async function getSameDirectorTitles(
+  mediaType: MediaType,
+  personId: number,
+  excludeId: number,
+): Promise<RelatedTitle[]> {
+  const endpoint = mediaType === 'movie' ? 'movie_credits' : 'tv_credits';
+  const job = mediaType === 'movie' ? 'Director' : 'Creator';
+  const data = await tmdbFetch<{ crew: RawCredit[] }>(`/person/${personId}/${endpoint}`);
+
+  const unique = new Map<number, RawCredit>();
+  for (const credit of data.crew) {
+    if (credit.job === job && credit.id !== excludeId && (credit.backdrop_path || credit.poster_path)) {
+      unique.set(credit.id, credit);
+    }
+  }
+
+  const top = [...unique.values()].sort((a, b) => b.popularity - a.popularity).slice(0, MAX_RELATED);
+
+  // Duração e gênero não vêm nos créditos: busca nos detalhes (cacheados).
+  return Promise.all(
+    top.map(async (credit) => {
+      const summary = toSummary(credit, mediaType);
+      try {
+        const details = await getTitleDetails(mediaType, credit.id);
+        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null };
+      } catch {
+        return { ...summary, runtime: null, genre: null };
+      }
+    }),
+  );
 }
 
 // Backdrop aleatório para o login: escolhe um título da tendência semanal.
