@@ -14,7 +14,7 @@ if (!(kind in LIST_NAMES)) {
 const name = LIST_NAMES[kind];
 ---
 
-<AppLayout fullWidth>
+<AppLayout fullWidth requireAuth>
 	<section class="list" data-kind={kind}>
 		<header class="list-header">
 			<div class="list-title">
@@ -43,7 +43,7 @@ const name = LIST_NAMES[kind];
 
 		<div id="empty-list" class="empty" hidden>
 			<p id="empty-list-text">Nothing here yet.</p>
-			<a id="empty-list-cta" class="cta" href="/explore">Go to Explore</a>
+			<a id="empty-list-cta" class="cta" href="/">Go to Explore</a>
 		</div>
 
 		<div id="empty-filter" class="empty" hidden>
@@ -58,8 +58,11 @@ const name = LIST_NAMES[kind];
 			<article class="title-card" role="listitem">
 				<a class="title-card__cover" href="/"></a>
 				<div class="title-card__info">
-					<h2 class="title-card__title"></h2>
-					<p class="title-card__meta"></p>
+					<img class="title-card__poster" alt="" hidden />
+					<div class="title-card__text">
+						<h2 class="title-card__title"></h2>
+						<p class="title-card__meta"></p>
+					</div>
 				</div>
 			</article>
 		</template>
@@ -69,9 +72,11 @@ const name = LIST_NAMES[kind];
 		import { supabase } from '../../lib/supabase.js';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
+		import { cardMeta } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
+		import { releaseGate } from '../../lib/auth/gate';
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
 		const setupList = () => {
@@ -124,7 +129,7 @@ const name = LIST_NAMES[kind];
 		const cardTemplate = document.getElementById('card-template') as HTMLTemplateElement;
 
 		// Backdrop e nota de cada título, buscados uma vez e reaproveitados.
-		const summaries = new Map<string, Promise<{ backdropPath: string | null; voteAverage: number } | null>>();
+		const summaries = new Map<string, Promise<{ backdropPath: string | null; voteAverage: number; runtime: number | null; genre: string | null } | null>>();
 		const loadSummary = (item: ListItem) => {
 			const key = `${item.mediaType}:${item.tmdbId}`;
 			if (!summaries.has(key)) {
@@ -143,11 +148,17 @@ const name = LIST_NAMES[kind];
 			const cover = node.querySelector<HTMLAnchorElement>('.title-card__cover')!;
 			cover.href = `/title/${item.mediaType}/${item.tmdbId}`;
 			cover.setAttribute('aria-label', item.title);
+			const posterImg = node.querySelector<HTMLImageElement>('.title-card__poster')!;
+			const posterSrc = posterUrl(item.posterPath, 'w185');
+			if (posterSrc) {
+				posterImg.src = posterSrc;
+				posterImg.hidden = false;
+			}
+
 			node.querySelector<HTMLElement>('.title-card__title')!.textContent = item.title;
 
-			const category = item.mediaType === 'movie' ? 'Movie' : 'Series';
 			const meta = node.querySelector<HTMLElement>('.title-card__meta')!;
-			meta.textContent = category;
+			meta.textContent = cardMeta({ mediaType: item.mediaType });
 
 			// Enquanto o backdrop não chega, usa o pôster como fundo.
 			const poster = posterUrl(item.posterPath, 'w500');
@@ -158,8 +169,7 @@ const name = LIST_NAMES[kind];
 				if (summary.backdropPath) {
 					node.style.backgroundImage = `url("https://image.tmdb.org/t/p/w780${summary.backdropPath}")`;
 				}
-				const rating = summary.voteAverage > 0 ? `★ ${summary.voteAverage.toFixed(1)}` : null;
-				meta.textContent = [category, rating].filter(Boolean).join(' · ');
+				meta.textContent = cardMeta({ mediaType: item.mediaType, ...summary });
 			});
 
 			return node;
@@ -228,6 +238,7 @@ const name = LIST_NAMES[kind];
 				window.location.replace('/login');
 				return;
 			}
+			releaseGate();
 
 			try {
 				// Ao voltar de um título, mantém o streaming e a ordenação escolhidos.
@@ -330,7 +341,7 @@ const name = LIST_NAMES[kind];
 	}
 
 	/* Cards: 3 colunas no desktop, 2 no tablet e 1 no mobile, com 16px de gap. */
-	/* 3 colunas ocupando a largura total (cards crescem mantendo 16:9); 2 no tablet e 1 no mobile. */
+	/* 3 colunas ocupando a largura total (largura adaptável, altura fixa, ver title-card.css); 2 no tablet e 1 no mobile. */
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));

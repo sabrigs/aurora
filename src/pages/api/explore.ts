@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getOnTheater, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
+import { getOnTheater, getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -42,5 +42,17 @@ export const GET: APIRoute = async ({ url }) => {
     return json({ error: 'upstream_error' }, 502);
   }
 
-  return json(result);
+  // Duração e gênero não vêm nas listagens: busca nos detalhes (cacheados). Se falhar, o card segue sem eles.
+  const items = await Promise.all(
+    result.items.map(async (item) => {
+      try {
+        const details = await getTitleDetails(item.mediaType, item.id);
+        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null };
+      } catch {
+        return { ...item, runtime: null, genre: null };
+      }
+    }),
+  );
+
+  return json({ ...result, items });
 };

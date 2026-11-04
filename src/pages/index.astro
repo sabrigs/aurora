@@ -1,110 +1,40 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import ListCard from '../components/lists/ListCard.astro';
+import ExploreFeed from '../components/explore/ExploreFeed.astro';
 ---
 
-<AppLayout fullWidth>
-	<section class="home">
-		<h1 class="sr-only">My lists</h1>
-		<div class="cards">
-			<ListCard kind="to_watch" name="To watch" />
-			<ListCard kind="favorites" name="Favorites" />
-			<ListCard kind="watched" name="Watched" />
-		</div>
-	</section>
+<AppLayout fullWidth requireAuth>
+	<h1 class="sr-only">Home</h1>
+
+	<div class="home">
+		<section class="lists" aria-label="My lists">
+			<div class="cards">
+				<ListCard kind="to_watch" name="To watch" />
+				<ListCard kind="favorites" name="Favorites" />
+				<ListCard kind="watched" name="Watched" />
+			</div>
+		</section>
+
+		<ExploreFeed />
+	</div>
 
 	<script>
-		import { supabase } from '../lib/supabase.js';
-		import { getListSummaries, LISTS_CHANGED_EVENT, type ListSummary } from '../lib/lists/store';
-		import { posterUrl } from '../lib/tmdb/images';
+		import { initListCards } from '../lib/lists/cards';
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
-		// Depois que o onboarding é concluído, não muda mais nesta aba: não precisa consultar de novo.
-		// Fica fora da montagem da tela, para sobreviver às navegações.
-		let onboardingDone = false;
-		let homeRefresh: (() => Promise<void>) | null = null;
-		window.addEventListener(LISTS_CHANGED_EVENT, () => void homeRefresh?.());
-
-		const setupHome = () => {
-		// Proteção da rota: sem sessão vai para o login; sem onboarding vai para o onboarding.
-		const redirectIfNeeded = async () => {
-			const { data: sessionData } = await supabase.auth.getSession();
-			const session = sessionData.session;
-			if (!session) {
-				window.location.replace('/login');
-				return false;
-			}
-			if (onboardingDone) return true;
-
-			const { data: profile } = await supabase
-				.from('profiles')
-				.select('onboarding_completed')
-				.eq('user_id', session.user.id)
-				.single();
-			if (!profile?.onboarding_completed) {
-				window.location.replace('/onboarding');
-				return false;
-			}
-			onboardingDone = true;
-			return true;
-		};
-
-		// Preenche um card: contador e prévia em leque (centro = mais recente).
-		const renderCard = (summary: ListSummary) => {
-			const card = document.querySelector<HTMLElement>(`[data-list-kind="${summary.kind}"]`);
-			if (!card) return;
-
-			card.querySelector<HTMLElement>('[data-count]')!.textContent = String(summary.count);
-
-			const slots = card.querySelectorAll<HTMLElement>('[data-poster]');
-			// Ordem visual: esquerda, centro (mais recente), direita.
-			const order = [1, 0, 2];
-			order.forEach((slotIndex, position) => {
-				const slot = slots[slotIndex];
-				const item = summary.recent[position];
-				const poster = posterUrl(item?.posterPath ?? null);
-
-				slot.classList.remove('poster--loading');
-				if (poster) {
-					slot.style.backgroundImage = `url("${poster}")`;
-					slot.style.backgroundSize = 'cover';
-				} else {
-					slot.classList.add('poster--silhouette');
-				}
-			});
-		};
-
-		const refresh = async () => {
-			try {
-				const summaries = await getListSummaries();
-				summaries.forEach(renderCard);
-			} catch (error) {
-				console.error(error);
-				// Sem dados: os pôsteres param de carregar e mostram a silhueta.
-				document.querySelectorAll('[data-poster].poster--loading').forEach((slot) => {
-					slot.classList.remove('poster--loading');
-					slot.classList.add('poster--silhouette');
-				});
-			}
-		};
-
-			homeRefresh = refresh;
-			redirectIfNeeded().then((ok) => {
-				if (ok) refresh();
-			});
-		};
-
 		document.addEventListener('astro:page-load', () => {
-			if (document.querySelector('.home')) setupHome();
+			if (document.querySelector('.home .list-card')) initListCards();
 		});
 	</script>
 </AppLayout>
 
 <style>
+	/* Listas no topo e, logo abaixo, o Explore: a barra de abas sobe sobre as listas ao rolar. */
 	.home {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
+		gap: 32px;
 	}
 
 	.sr-only {
@@ -116,7 +46,7 @@ import ListCard from '../components/lists/ListCard.astro';
 		white-space: nowrap;
 	}
 
-	/* Três cards lado a lado ocupando toda a largura; empilhados em telas estreitas. */
+	/* Três cards lado a lado ocupando toda a largura. */
 	.cards {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -124,9 +54,36 @@ import ListCard from '../components/lists/ListCard.astro';
 		width: 100%;
 	}
 
+	/* Na Home os cards são mais baixos (250px) para o Explore aparecer mais cedo. */
+	.cards > :global(.list-card) {
+		box-sizing: border-box;
+		height: 250px;
+		/* Leque de pôsteres menor, para caber abaixo do título. */
+		--poster-w: 96px;
+		--poster-center-w: 120px;
+		--fan-offset: 68px;
+	}
+
+	/* Mobile: carrossel horizontal, para o Explore ficar perto do topo. */
 	@media (max-width: 767px) {
 		.cards {
-			grid-template-columns: minmax(0, 1fr);
+			display: flex;
+			gap: 12px;
+			margin-inline: -16px;
+			padding-inline: 16px;
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: 16px;
+			scrollbar-width: none;
+		}
+
+		.cards::-webkit-scrollbar {
+			display: none;
+		}
+
+		.cards > :global(.list-card) {
+			flex: 0 0 78%;
+			scroll-snap-align: start;
 		}
 	}
 </style>

@@ -1,23 +1,23 @@
 ---
-// Toolbar flutuante e fixa embaixo, no mobile, com "My lists" e "Explore".
+// Toolbar flutuante e fixa embaixo, no mobile, com "Home" e "My lists".
 const path = Astro.url.pathname;
-const current = (href: string) => (path === href ? 'page' : undefined);
+const normalized = path.length > 1 ? path.replace(/\/$/, '') : path;
+const current = (href: string) => (normalized === href ? 'page' : undefined);
 ---
 
 <nav class="bottom-nav" aria-label="Main">
 	<a href="/" aria-current={current('/')}>
 		<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round" />
+		</svg>
+		<span>Home</span>
+	</a>
+	<a href="/lists" aria-current={current('/lists')}>
+		<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
 			<rect x="3" y="7" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8" fill="none" />
 			<path d="M9 3l3 4 3-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" />
 		</svg>
 		<span>My lists</span>
-	</a>
-	<a href="/explore" aria-current={current('/explore')}>
-		<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-			<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" fill="none" />
-			<path d="M20 20l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-		</svg>
-		<span>Explore</span>
 	</a>
 </nav>
 
@@ -67,8 +67,8 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 	// A toolbar só existe nas telas de primeiro nível. Se ela ficar para trás numa navegação
 	// sem recarregar a página, remove aqui.
 	const removeOutsideRootScreens = () => {
-		const path = window.location.pathname;
-		if (path !== '/' && path !== '/explore') {
+		const path = window.location.pathname.replace(/\/$/, '') || '/';
+		if (path !== '/' && path !== '/lists') {
 			document.querySelectorAll('.bottom-nav').forEach((nav) => nav.remove());
 		}
 	};

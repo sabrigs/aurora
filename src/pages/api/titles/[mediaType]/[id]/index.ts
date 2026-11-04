@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getTitleDetails } from '../../../../../lib/tmdb/titles';
 import type { MediaType } from '../../../../../lib/tmdb/client';
 
-// Dados resumidos de um título para os cards (backdrop, pôster e nota). Cacheado pela TMDB client.
+// Dados resumidos de um título para os cards (backdrop, pôster, nota, duração e gênero). Cacheado pela TMDB client.
 export const GET: APIRoute = async ({ params }) => {
   const mediaType = params.mediaType;
   const id = Number(params.id);
@@ -21,6 +21,8 @@ export const GET: APIRoute = async ({ params }) => {
         backdropPath: details.backdropPath,
         posterPath: details.posterPath,
         voteAverage: details.voteAverage,
+        runtime: details.runtime,
+        genre: details.genres[0] ?? null,
       }),
       {
         headers: {

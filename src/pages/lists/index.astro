@@ -1,0 +1,61 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import ListCard from '../../components/lists/ListCard.astro';
+---
+
+<AppLayout fullWidth requireAuth>
+	<section class="all-lists">
+		<h1 class="sr-only">My lists</h1>
+		<div class="cards">
+			<ListCard kind="to_watch" name="To watch" />
+			<ListCard kind="favorites" name="Favorites" />
+			<ListCard kind="watched" name="Watched" />
+		</div>
+	</section>
+
+	<script>
+		import { initListCards } from '../../lib/lists/cards';
+
+		document.addEventListener('astro:page-load', () => {
+			if (document.querySelector('.all-lists .list-card')) initListCards();
+		});
+	</script>
+</AppLayout>
+
+<style>
+	.all-lists {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	/* Título só para leitores de tela. */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	/* Grade pronta para mais listas: 3 colunas, 2 no tablet e 1 no mobile. */
+	.cards {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 16px;
+		width: 100%;
+	}
+
+	@media (max-width: 1023px) {
+		.cards {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 767px) {
+		.cards {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>

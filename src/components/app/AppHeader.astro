@@ -1,17 +1,19 @@
 ---
-// Navbar: logo à esquerda; no desktop, "My lists" e "Explore" e o avatar à direita.
+// Navbar: logo à esquerda; no desktop, "Home" (listas + Explore), "My lists" e o avatar à direita.
 // No mobile, a navegação vai para a toolbar inferior (BottomNav) e o avatar fica no header.
 import AvatarMenu from './AvatarMenu.astro';
 
 const path = Astro.url.pathname;
-const current = (href: string) => (path === href ? 'page' : undefined);
+const isCurrent = (href: string, current: string) =>
+	href === '/' ? current === '/' : current === href || current.startsWith(`${href}/`);
+const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 ---
 
 <header class="app-header">
 	<a class="logo" href="/">Aurora</a>
 	<nav class="desktop-nav" aria-label="Main">
-		<a href="/" aria-current={current('/')}>My lists</a>
-		<a href="/explore" aria-current={current('/explore')}>Explore</a>
+		<a href="/" aria-current={current('/')}>Home</a>
+		<a href="/lists" aria-current={current('/lists')}>My lists</a>
 	</nav>
 	<div class="avatar-slot">
 		<AvatarMenu />
@@ -23,7 +25,9 @@ const current = (href: string) => (path === href ? 'page' : undefined);
 	const markCurrentPage = () => {
 		const path = window.location.pathname;
 		document.querySelectorAll<HTMLAnchorElement>('.app-header a[href]').forEach((link) => {
-			if (link.getAttribute('href') === path) {
+			const href = link.getAttribute('href') ?? '';
+			const isCurrent = href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+			if (isCurrent) {
 				link.setAttribute('aria-current', 'page');
 			} else {
 				link.removeAttribute('aria-current');

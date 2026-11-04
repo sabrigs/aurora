@@ -2,13 +2,20 @@
 .title-card {
 	position: relative;
 	isolation: isolate;
-	aspect-ratio: 16 / 9;
+	/* 3 colunas: 300px de altura; com 2 ou 1 coluna: 250px. */
+	height: 300px;
 	border-radius: 16px;
 	clip-path: inset(0 round 16px);
 	overflow: hidden;
 	background-color: var(--color-surface-raised);
 	background-size: cover;
 	background-position: center;
+}
+
+@media (max-width: 1023px) {
+	.title-card {
+		height: 250px;
+	}
 }
 
 .title-card::after {
@@ -33,14 +40,37 @@
 	right: 16px;
 	bottom: 16px;
 	z-index: 2;
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
 	pointer-events: none;
 	color: #fff;
 }
 
+/* Pôster do título por cima do backdrop, no canto esquerdo. */
+.title-card__poster {
+	flex: 0 0 auto;
+	width: 100px;
+	aspect-ratio: 2 / 3;
+	border-radius: 4px;
+	object-fit: cover;
+	background-color: var(--color-surface-raised);
+}
+
+.title-card__poster[hidden] {
+	display: none;
+}
+
+.title-card__text {
+	min-width: 0;
+	flex: 1;
+}
+
 .title-card__title {
 	margin: 0;
-	font-size: 1.25rem;
+	font-size: 1.5rem;
 	font-weight: 600;
+	line-height: 1.2;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
