@@ -65,12 +65,12 @@ const { kind, name } = Astro.props;
 
   .poster {
     position: absolute;
-    bottom: -48px;
+    bottom: -22px;
     left: 50%;
-    width: 130px;
+    width: var(--poster-w, 130px);
     aspect-ratio: 2 / 3;
-    margin-left: -65px;
-    border-radius: 12px;
+    margin-left: calc(var(--poster-w, 130px) / -2);
+    border-radius: 4px 4px 0 0;
     background-color: var(--color-surface-raised);
     background-size: cover;
     background-position: center;
@@ -79,20 +79,20 @@ const { kind, name } = Astro.props;
   }
 
   .poster:nth-child(1) {
-    transform: translateX(-90px) rotate(-10deg);
+    transform: translateX(calc(var(--fan-offset, 90px) * -1)) rotate(-10deg);
     z-index: 1;
   }
 
   /* Centro maior e mais alto que os das laterais. */
   .poster:nth-child(2) {
-    width: 160px;
-    margin-left: -80px;
+    width: var(--poster-center-w, 160px);
+    margin-left: calc(var(--poster-center-w, 160px) / -2);
     transform: translateY(-16px);
     z-index: 3;
   }
 
   .poster:nth-child(3) {
-    transform: translateX(90px) rotate(10deg);
+    transform: translateX(var(--fan-offset, 90px)) rotate(10deg);
     z-index: 2;
   }
 
