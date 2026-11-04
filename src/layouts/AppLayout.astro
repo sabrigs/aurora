@@ -4,20 +4,65 @@ import AppHeader from '../components/app/AppHeader.astro';
 import BottomNav from '../components/app/BottomNav.astro';
 import '../styles/popover.css';
 import '../styles/title-card.css';
+import { IDLE_LIMIT_MS, LAST_ACTIVE_KEY, ONBOARDED_KEY, sessionStorageKey } from '../lib/auth/gate';
 
 interface Props {
 	// Ocupa toda a largura da tela (com a margem de 16px), em vez de limitar a 1100px.
 	fullWidth?: boolean;
+	// Tela só para quem está logado: sem sessão guardada, vai ao login antes de pintar a tela.
+	requireAuth?: boolean;
 }
 
-const { fullWidth = false } = Astro.props;
+const { fullWidth = false, requireAuth = false } = Astro.props;
 
-// A toolbar aparece só nas telas de primeiro nível (My lists e Explore).
-const pathname = Astro.url.pathname;
-const showBottomNav = pathname === '/' || pathname === '/explore';
+// Dados para a proteção inline (roda no <head>, antes da primeira pintura).
+const gate = {
+	requireAuth,
+	sessionKey: sessionStorageKey(import.meta.env.PUBLIC_SUPABASE_URL),
+	lastActiveKey: LAST_ACTIVE_KEY,
+	onboardedKey: ONBOARDED_KEY,
+	idleLimitMs: IDLE_LIMIT_MS,
+	// Em dev com usuário de teste, a sessão nasce depois do carregamento (ver lib/supabase.js).
+	devAutoLogin: import.meta.env.DEV && Boolean(import.meta.env.PUBLIC_DEV_EMAIL),
+};
+
+// A toolbar aparece só nas telas de primeiro nível (Home e My lists).
+const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+const showBottomNav = pathname === '/' || pathname === '/lists';
 ---
 
 <Layout>
+	<Fragment slot="head">
+		<script is:inline define:vars={{ gate }}>
+			// Evita ver a tela protegida por um instante antes de pular para o login (ou o onboarding).
+			(function () {
+				if (!gate.requireAuth) return;
+				var root = document.documentElement;
+				try {
+					var stored = localStorage.getItem(gate.sessionKey);
+					var last = Number(localStorage.getItem(gate.lastActiveKey) || 0);
+					var expired = last && Date.now() - last > gate.idleLimitMs;
+					if (!stored && gate.devAutoLogin && !expired) {
+						root.setAttribute('data-guard', 'pending');
+						return;
+					}
+					if (!stored || expired) {
+						root.setAttribute('data-guard', 'redirect');
+						location.replace('/login');
+						return;
+					}
+					// Sessão guardada, mas ainda não sabemos se o onboarding foi concluído:
+					// esconde a tela até a verificação terminar.
+					var userId = (JSON.parse(stored).user || {}).id;
+					if (localStorage.getItem(gate.onboardedKey) !== userId) {
+						root.setAttribute('data-guard', 'pending');
+					}
+				} catch (error) {
+					// Sem acesso ao armazenamento: a verificação normal da tela decide.
+				}
+			})();
+		</script>
+	</Fragment>
 	<div transition:persist="app-header">
 		<AppHeader />
 	</div>
@@ -26,6 +71,12 @@ const showBottomNav = pathname === '/' || pathname === '/explore';
 	</main>
 	{showBottomNav && <BottomNav />}
 </Layout>
+
+<style is:global>
+	html[data-guard] body {
+		visibility: hidden;
+	}
+</style>
 
 <style>
 	.app-main {

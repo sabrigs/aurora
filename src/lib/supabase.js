@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
+import { enforceIdleLimit, touchActivity } from './auth/gate'
+
+// Acesso guardado por 30 dias: quem não usa o Aurora neste navegador nesse período volta ao login.
+// Precisa rodar antes de o cliente ler a sessão guardada.
+enforceIdleLimit()
 
 export const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  { auth: { persistSession: true, autoRefreshToken: true } }
 )
+
+// Quem deixa a aba aberta também conta como uso: renova o prazo ao voltar para ela.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') touchActivity()
+})
+document.addEventListener('astro:page-load', touchActivity)
 
 // Somente em desenvolvimento: entra sozinho com um usuário de teste, sem passar pela tela de login.
 // Defina PUBLIC_DEV_EMAIL e PUBLIC_DEV_PASSWORD no .env.local. Sem eles, o login segue normal.
