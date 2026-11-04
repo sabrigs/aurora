@@ -5,9 +5,9 @@ import Title from '../components/ui/Title.astro';
 import InputField from '../components/ui/InputField.astro';
 import { getTopBrazilProviders, type StreamingProvider } from '../lib/streaming/availability';
 
-// Os 5 streamings mais usados no Brasil (TMDB watch providers).
+// Os streamings suportados no Brasil (TMDB watch providers), em ordem alfabética.
 // Se a API falhar, a lista fica vazia e o usuário ainda pode concluir.
-const providers: StreamingProvider[] = await getTopBrazilProviders('movie', 5).catch(() => []);
+const providers: StreamingProvider[] = await getTopBrazilProviders('movie').catch(() => []);
 const logoBase = 'https://image.tmdb.org/t/p/w92';
 ---
 

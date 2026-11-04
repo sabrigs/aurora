@@ -32,16 +32,28 @@ const toProvider = (raw: RawProvider): StreamingProvider => ({
   displayPriority: raw.display_priority,
 });
 
-// Escopo do onboarding e do menu "My streamings": os streamings mais usados no Brasil.
+// Streamings oferecidos no onboarding e no menu "My streamings". Os nomes são os da TMDB.
+const SUPPORTED_BRANDS = new Set([
+  'Amazon Prime Video',
+  'Apple TV',
+  'Crunchyroll',
+  'Disney Plus',
+  'HBO Max',
+  'MUBI',
+  'Netflix',
+]);
+
+// Os streamings suportados que existem no Brasil, em ordem alfabética.
 export async function getTopBrazilProviders(
   mediaType: MediaType = 'movie',
-  limit = 5,
 ): Promise<StreamingProvider[]> {
   const data = await tmdbFetch<ProvidersResponse>(`/watch/providers/${mediaType}`, {
     watch_region: 'BR',
   });
 
-  return groupByBrand(data.results.map(toProvider)).slice(0, limit);
+  return groupByBrand(data.results.map(toProvider))
+    .filter((provider) => SUPPORTED_BRANDS.has(provider.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // Detalhes → "Available on" e filtro das listas: streamings com assinatura no Brasil.

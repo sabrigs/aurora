@@ -3,7 +3,7 @@ import { getTopBrazilProviders } from '../../lib/streaming/availability';
 import { logoUrl } from '../../lib/tmdb/images';
 
 // Os mesmos 5 streamings do onboarding, para adicionar pelo menu.
-const providers = await getTopBrazilProviders('movie', 5).catch(() => []);
+const providers = await getTopBrazilProviders('movie').catch(() => []);
 const providersForClient = providers.map((provider) => ({
 	id: provider.id,
 	name: provider.name,

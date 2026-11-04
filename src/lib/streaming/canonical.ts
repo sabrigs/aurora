@@ -4,13 +4,14 @@
 const BRAND_RULES: { pattern: RegExp; brand: string }[] = [
   { pattern: /^netflix\b/i, brand: 'Netflix' },
   { pattern: /^(hbo max|max)\b/i, brand: 'HBO Max' },
-  { pattern: /^(amazon prime video|prime video|amazon channel)\b/i, brand: 'Prime Video' },
-  { pattern: /^disney( plus|\+)?\b/i, brand: 'Disney+' },
+  { pattern: /^(amazon prime video|prime video|amazon channel)\b/i, brand: 'Amazon Prime Video' },
+  { pattern: /^disney( plus|\+)?\b/i, brand: 'Disney Plus' },
   { pattern: /^crunchyroll\b/i, brand: 'Crunchyroll' },
   { pattern: /^apple tv\b/i, brand: 'Apple TV' },
   { pattern: /^paramount( ?\+|\s+plus)?\b/i, brand: 'Paramount+' },
   { pattern: /^globoplay\b/i, brand: 'Globoplay' },
   { pattern: /^plex\b/i, brand: 'Plex' },
+  { pattern: /^mubi\b/i, brand: 'MUBI' },
 ];
 
 // Nome da marca principal. Sem regra específica, remove sufixos de plano e "Channel".
