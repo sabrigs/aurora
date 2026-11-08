@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { requireUser } from '../../lib/auth/require-user';
 import { getOnTheater, getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
 
 const json = (body: unknown, status = 200) =>
@@ -8,7 +9,10 @@ const json = (body: unknown, status = 200) =>
   });
 
 // Tabs do Explore e busca, paginados para o scroll infinito.
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request, url }) => {
+  const denied = await requireUser(request);
+  if (denied) return denied;
+
   const tab = url.searchParams.get('tab');
   const page = Math.min(Math.max(Number(url.searchParams.get('page') ?? '1') || 1, 1), 500);
 

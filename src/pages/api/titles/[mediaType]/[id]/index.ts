@@ -1,9 +1,13 @@
 import type { APIRoute } from 'astro';
+import { requireUser } from '../../../../../lib/auth/require-user';
 import { getTitleDetails } from '../../../../../lib/tmdb/titles';
 import type { MediaType } from '../../../../../lib/tmdb/client';
 
 // Dados resumidos de um título para os cards (backdrop, pôster, nota, duração e gênero). Cacheado pela TMDB client.
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ request, params }) => {
+  const denied = await requireUser(request);
+  if (denied) return denied;
+
   const mediaType = params.mediaType;
   const id = Number(params.id);
 

@@ -70,6 +70,7 @@ const name = LIST_NAMES[kind];
 
 	<script>
 		import { supabase } from '../../lib/supabase.js';
+		import { apiFetch } from '../../lib/api';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
 		import { cardMeta } from '../../lib/tmdb/format';
@@ -108,7 +109,7 @@ const name = LIST_NAMES[kind];
 			if (!availability.has(key)) {
 				availability.set(
 					key,
-					fetch(`/api/titles/${item.mediaType}/${item.tmdbId}/providers`)
+					apiFetch(`/api/titles/${item.mediaType}/${item.tmdbId}/providers`)
 						.then((response) => response.json() as Promise<{ brands: string[] }>)
 						.then((data) => new Set(data.brands))
 						.catch(() => new Set<number>()),
@@ -135,7 +136,7 @@ const name = LIST_NAMES[kind];
 			if (!summaries.has(key)) {
 				summaries.set(
 					key,
-					fetch(`/api/titles/${item.mediaType}/${item.tmdbId}`)
+					apiFetch(`/api/titles/${item.mediaType}/${item.tmdbId}`)
 						.then((response) => (response.ok ? response.json() : null))
 						.catch(() => null),
 				);

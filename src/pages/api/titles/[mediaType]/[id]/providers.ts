@@ -1,9 +1,13 @@
 import type { APIRoute } from 'astro';
+import { requireUser } from '../../../../../lib/auth/require-user';
 import { getTitleStreamingProviders } from '../../../../../lib/streaming/availability';
 import type { MediaType } from '../../../../../lib/tmdb/client';
 
 // Marcas de streaming onde o título está disponível (usado pelo filtro de streaming das listas).
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ request, params }) => {
+  const denied = await requireUser(request);
+  if (denied) return denied;
+
   const mediaType = params.mediaType;
   const id = Number(params.id);
 

@@ -61,6 +61,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 
 	<script>
 		import { supabase } from '../../lib/supabase.js';
+		import { apiFetch } from '../../lib/api';
 		import { initAddStatus } from '../../lib/lists/add-status';
 		import { posterUrl } from '../../lib/tmdb/images';
 		import { cardMeta } from '../../lib/tmdb/format';
@@ -146,7 +147,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 				);
 			});
 
-			const response = await fetch(
+			const response = await apiFetch(
 				`/api/region?lat=${position.coords.latitude}&lng=${position.coords.longitude}`,
 			);
 			const data = (await response.json()) as { region: string | null };
@@ -248,7 +249,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 					}
 				}
 
-				const response = await fetch(`/api/explore?${params}`);
+				const response = await apiFetch(`/api/explore?${params}`);
 				if (!response.ok) throw new Error(`explore ${response.status}`);
 				const data = (await response.json()) as { items: Item[]; totalPages: number };
 
