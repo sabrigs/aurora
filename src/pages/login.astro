@@ -32,6 +32,15 @@ const backdrop = backdropPath
 						<h1 class="sent-title">Check your email</h1>
 						<p class="sent-text">To continue, click in the link sent to</p>
 						<p class="sent-email"><strong id="sent-email"></strong></p>
+
+						<form id="code-form" class="code-form" novalidate>
+							<p class="sent-text">Using the installed app? Enter the code from the email instead.</p>
+							<div class="field">
+								<input id="input-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Code" aria-label="Code from email" aria-describedby="code-error" />
+								<p id="code-error" class="error" role="alert" hidden></p>
+							</div>
+							<Button id="code-button" type="submit" label="Verify code" class="pill" />
+						</form>
 						<p class="sent-retry">Not finding the email? <button type="button" id="change-email" class="link">Try again</button></p>
 					</div>
 				</div>
@@ -96,6 +105,39 @@ const backdrop = backdropPath
 			sent.hidden = false;
 		});
 
+		// O link do e-mail abre no navegador (no iOS o app instalado não recebe links).
+		// O código digitado no próprio app cria a sessão no lugar certo.
+		const codeForm = document.getElementById('code-form') as HTMLFormElement;
+		const codeInput = document.getElementById('input-code') as HTMLInputElement;
+		const codeError = document.getElementById('code-error') as HTMLParagraphElement;
+		const codeButton = document.getElementById('code-button') as HTMLButtonElement;
+
+		codeForm.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			codeError.hidden = true;
+			const token = codeInput.value.replace(/\s/g, '');
+			if (!/^\d{6,8}$/.test(token)) {
+				codeError.textContent = 'Enter the code from the email.';
+				codeError.hidden = false;
+				return;
+			}
+
+			codeButton.disabled = true;
+			const { error } = await supabase.auth.verifyOtp({
+				email: sentEmail.textContent ?? '',
+				token,
+				type: 'email',
+			});
+			codeButton.disabled = false;
+
+			if (error) {
+				codeError.textContent = 'Invalid or expired code. Try again.';
+				codeError.hidden = false;
+				return;
+			}
+			window.location.replace('/auth/callback');
+		});
+
 		changeEmail.addEventListener('click', () => {
 			sent.hidden = true;
 			form.hidden = false;
@@ -156,6 +198,14 @@ const backdrop = backdropPath
 			font-size: 3rem;
 			line-height: 1.1;
 			color: var(--color-text);
+		}
+
+		.code-form {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 16px;
+			width: 100%;
 		}
 
 		#login-form,
