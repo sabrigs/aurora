@@ -143,11 +143,19 @@ export interface Director {
   name: string;
 }
 
+export interface CastMember {
+  name: string;
+  character: string;
+  profilePath: string | null;
+}
+
 export interface TitleDetails extends TitleSummary {
   genres: string[];
   runtime: number | null;
   imdbId: string | null;
-  cast: { name: string; character: string; profilePath: string | null }[];
+  cast: CastMember[];
+  // Tamanho do elenco completo na TMDB (`cast` traz só os primeiros).
+  castTotal: number;
   trailers: Trailer[];
   // Filme: diretor. Série: criador. Nulo quando a TMDB não informa.
   director: Director | null;
@@ -213,6 +221,7 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
     genres: raw.genres.map((genre) => genre.name),
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     imdbId: raw.external_ids?.imdb_id ?? raw.imdb_id ?? null,
+    castTotal: raw.credits?.cast.length ?? 0,
     cast: (raw.credits?.cast ?? []).slice(0, 10).map((member) => ({
       name: member.name,
       character: member.character,
@@ -227,6 +236,19 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
         ? (raw.credits?.crew.find((member) => member.job === 'Director') ?? null)
         : (raw.created_by?.[0] ?? null),
   };
+}
+
+// Elenco completo, na ordem de créditos da TMDB. Carregado só quando a pessoa pede ("Show all").
+export async function getFullCast(mediaType: MediaType, id: number): Promise<CastMember[]> {
+  const data = await tmdbFetch<{
+    cast: { name: string; character: string; profile_path: string | null }[];
+  }>(`/${mediaType}/${id}/credits`);
+
+  return data.cast.map((member) => ({
+    name: member.name,
+    character: member.character,
+    profilePath: member.profile_path,
+  }));
 }
 
 export interface RelatedTitle extends TitleSummary {

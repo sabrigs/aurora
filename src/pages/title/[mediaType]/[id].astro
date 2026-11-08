@@ -53,6 +53,17 @@ const unreleasedMessage = !releaseDate
 		: `Not released yet. Expected on ${formatDate(releaseDate)}.`;
 
 const category = details.mediaType === 'movie' ? 'Movie' : 'Series';
+
+// Série: situação na TMDB (no ar, encerrada ou cancelada) e quantidade de temporadas (sem a temporada 0).
+const SERIES_STATUS: Record<string, { label: string; tone: 'ongoing' | 'ended' | 'canceled' }> = {
+	'Returning Series': { label: 'Ongoing', tone: 'ongoing' },
+	'In Production': { label: 'Ongoing', tone: 'ongoing' },
+	Ended: { label: 'Ended', tone: 'ended' },
+	Canceled: { label: 'Canceled', tone: 'canceled' },
+};
+const seriesStatus = details.mediaType === 'tv' ? (SERIES_STATUS[details.status] ?? null) : null;
+const seasonCount = series?.seasons.length ?? 0;
+const seasonsLabel = seasonCount > 0 ? `${seasonCount} ${seasonCount === 1 ? 'season' : 'seasons'}` : null;
 const duration = details.runtime
 	? details.runtime >= 60
 		? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}min`
@@ -60,7 +71,8 @@ const duration = details.runtime
 	: null;
 const genre = details.genres.slice(0, 2).join(', ') || null;
 const rating = details.voteAverage > 0 ? `★ ${details.voteAverage.toFixed(1)}` : null;
-const metadata = [category, duration, genre, rating].filter(Boolean).join(' • ');
+// Cada informação vira um <span>; o espaçamento entre elas é feito por gap no CSS, como nos cards.
+const metadata = [category, seasonsLabel, duration, genre, rating].filter(Boolean);
 
 const backdrop = details.backdropPath ? `https://image.tmdb.org/t/p/w1280${details.backdropPath}` : null;
 const poster = posterUrl(details.posterPath, 'w342');
@@ -81,8 +93,11 @@ const poster = posterUrl(details.posterPath, 'w342');
 			<div class="hero-inner">
 				{poster && <img class="hero-poster" src={poster} alt="" />}
 				<div class="hero-text">
+					{seriesStatus && (
+						<span class={`status-tag status-tag--${seriesStatus.tone}`}>{seriesStatus.label}</span>
+					)}
 					<h1>{details.title}</h1>
-					<p class="metadata">{metadata}</p>
+					<p class="metadata">{metadata.map((part) => <span>{part}</span>)}</p>
 					<AddStatusButton tmdbId={details.id} mediaType={details.mediaType} title={details.title} posterPath={details.posterPath} />
 				</div>
 			</div>
@@ -150,9 +165,9 @@ const poster = posterUrl(details.posterPath, 'w342');
 			)}
 
 			{details.cast.length > 0 && (
-				<section class="block" aria-labelledby="cast">
+				<section class="block" aria-labelledby="cast" data-cast data-media-type={details.mediaType} data-tmdb-id={details.id} data-total={details.castTotal}>
 					<h2 id="cast">Cast</h2>
-					<ul class="cast">
+					<ul class="cast" data-cast-list>
 						{details.cast.map((member) => (
 							<li class="cast-member">
 								<span class="cast-photo" style={member.profilePath ? `background-image: url("${posterUrl(member.profilePath, 'w185')}");` : undefined} aria-hidden="true"></span>
@@ -161,6 +176,15 @@ const poster = posterUrl(details.posterPath, 'w342');
 							</li>
 						))}
 					</ul>
+					<button type="button" class="cast-more" data-cast-more hidden={details.castTotal <= 2}>Show all {details.castTotal}</button>
+					<!-- Modelo dos membros carregados ao pedir o elenco completo (recebe o escopo de estilos da página). -->
+					<template data-cast-template>
+						<li class="cast-member">
+							<span class="cast-photo" aria-hidden="true"></span>
+							<span class="cast-name"></span>
+							<span class="cast-role"></span>
+						</li>
+					</template>
 				</section>
 			)}
 
@@ -197,11 +221,78 @@ const poster = posterUrl(details.posterPath, 'w342');
 
 <script>
 	import { bindBackLink } from '../../../lib/ui/navigation';
+	import { apiFetch } from '../../../lib/api';
+	import { posterUrl } from '../../../lib/tmdb/images';
+
+	// Cast: mostra só a primeira linha (a grade esconde o resto por CSS). "Show all" carrega o elenco completo.
+	const setupCast = () => {
+		const section = document.querySelector<HTMLElement>('[data-cast]');
+		if (!section) return;
+		const list = section.querySelector<HTMLElement>('[data-cast-list]')!;
+		const button = section.querySelector<HTMLButtonElement>('[data-cast-more]')!;
+		const template = section.querySelector<HTMLTemplateElement>('[data-cast-template]')!;
+		const total = Number(section.dataset.total);
+
+		// O botão só aparece quando há mais membros do que cabem na primeira linha.
+		const updateButton = () => {
+			if (list.classList.contains('is-expanded')) return;
+			const hidden = [...list.children].some((member) => getComputedStyle(member).display === 'none');
+			button.hidden = !hidden && total <= list.children.length;
+		};
+		updateButton();
+		window.addEventListener('resize', updateButton);
+
+		button.addEventListener('click', async () => {
+			button.disabled = true;
+			button.textContent = 'Loading…';
+			try {
+				// Os membros que a página já trouxe bastam quando o elenco é pequeno.
+				if (total > list.children.length) {
+					const response = await apiFetch(`/api/titles/${section.dataset.mediaType}/${section.dataset.tmdbId}/cast`);
+					if (!response.ok) throw new Error(`cast_${response.status}`);
+					const data = (await response.json()) as {
+						cast: { name: string; character: string; profilePath: string | null }[];
+					};
+
+					list.replaceChildren(
+						...data.cast.map((member) => {
+							const item = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+							const photo = item.querySelector<HTMLElement>('.cast-photo')!;
+							const src = posterUrl(member.profilePath, 'w185');
+							if (src) {
+								// <img> com carregamento preguiçoso: elencos grandes não baixam todas as fotos de uma vez.
+								const img = document.createElement('img');
+								img.src = src;
+								img.alt = '';
+								img.loading = 'lazy';
+								img.style.cssText = 'display:block;width:100%;height:100%;object-fit:cover';
+								photo.append(img);
+							}
+							item.querySelector('.cast-name')!.textContent = member.name;
+							const role = item.querySelector<HTMLElement>('.cast-role')!;
+							if (member.character) role.textContent = member.character;
+							else role.remove();
+							return item;
+						}),
+					);
+				}
+				list.classList.add('is-expanded');
+				window.removeEventListener('resize', updateButton);
+				button.remove();
+			} catch (error) {
+				console.error(error);
+				button.disabled = false;
+				button.textContent = "Couldn't load the cast. Try again";
+			}
+		});
+	};
 
 	// A navegação troca a página sem recarregar o script: liga o botão e o rótulo a cada visita.
 	document.addEventListener('astro:page-load', () => {
 		const back = document.querySelector<HTMLAnchorElement>('[data-back]');
 		if (back) bindBackLink(back);
+
+		setupCast();
 
 		// Trailer: abre o vídeo do YouTube num overlay por cima da página.
 		const modal = document.getElementById('trailer-modal') as HTMLDialogElement | null;
@@ -230,7 +321,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 </script>
 
 <style>
-	/* Backdrop de borda a borda, logo abaixo da navbar fixa (64px). */
+	/* Backdrop de borda a borda, logo abaixo da navbar fixa. */
 	.title {
 		display: flex;
 		flex-direction: column;
@@ -243,7 +334,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		height: clamp(300px, 45vw, 440px);
+		height: clamp(300px, 45vw, 550px);
 		margin: -24px -16px 0;
 		padding: 16px;
 		background-color: var(--color-surface);
@@ -320,6 +411,42 @@ const poster = posterUrl(details.posterPath, 'w342');
 		backdrop-filter: blur(8px);
 	}
 
+	/* Situação da série, acima do título: bolinha colorida sobre fundo translúcido (legível em qualquer backdrop). */
+	.status-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: -4px;
+		padding: 4px 12px;
+		border-radius: 999px;
+		background-color: #00000066;
+		backdrop-filter: blur(8px);
+		color: #fff;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+
+	.status-tag::before {
+		content: '';
+		width: 8px;
+		height: 8px;
+		border-radius: 999px;
+		background-color: var(--tag-color);
+	}
+
+	.status-tag--ongoing {
+		--tag-color: #3e9b4f;
+	}
+
+	.status-tag--ended {
+		--tag-color: #9ca3af;
+	}
+
+	.status-tag--canceled {
+		--tag-color: #e5484d;
+	}
+
 	h1 {
 		margin: 0;
 		font-size: 2.25rem;
@@ -328,6 +455,9 @@ const poster = posterUrl(details.posterPath, 'w342');
 	}
 
 	.metadata {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 16px;
 		margin: 0;
 		color: #ffffffcc;
 		font-size: 1rem;
@@ -415,9 +545,41 @@ const poster = posterUrl(details.posterPath, 'w342');
 		min-width: 0;
 	}
 
+	/* Só a primeira linha da grade aparece; "Show all" remove a limitação (4 colunas; 3 e 2 abaixo). */
+	.cast:not(.is-expanded) .cast-member:nth-child(n + 5) {
+		display: none;
+	}
+
+	.cast-more {
+		align-self: flex-start;
+		height: 44px;
+		padding: 0 20px;
+		border: 1px solid var(--color-border-strong);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--color-text);
+		font: inherit;
+		font-size: 0.9375rem;
+		cursor: pointer;
+	}
+
+	.cast-more:hover:not(:disabled) {
+		background-color: var(--color-surface-hover);
+	}
+
+	.cast-more:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+
+	.cast-more[hidden] {
+		display: none;
+	}
+
 	.cast-photo {
 		display: block;
 		height: 180px;
+		overflow: hidden;
 		border-radius: 4px;
 		background-color: var(--color-surface-raised);
 		background-image: linear-gradient(180deg, var(--color-surface-hover), var(--color-surface-raised));
@@ -566,11 +728,19 @@ const poster = posterUrl(details.posterPath, 'w342');
 		.cast {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
+
+		.cast:not(.is-expanded) .cast-member:nth-child(n + 4) {
+			display: none;
+		}
 	}
 
 	@media (max-width: 767px) {
 		.cast {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.cast:not(.is-expanded) .cast-member:nth-child(n + 3) {
+			display: none;
 		}
 
 		h1 {
