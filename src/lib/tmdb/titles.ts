@@ -181,6 +181,7 @@ interface RawDetails extends RawTitle {
   created_by?: { id: number; name: string }[];
   status?: string;
   number_of_seasons?: number;
+  seasons?: { season_number: number; episode_count: number }[];
   release_date?: string;
   first_air_date?: string;
   release_dates?: { results: { iso_3166_1: string; release_dates: { type: number; release_date: string }[] }[] };
@@ -231,7 +232,10 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
       profilePath: member.profile_path,
     })),
     status: raw.status ?? '',
-    seasons: raw.number_of_seasons ?? 0,
+    // Só temporadas regulares com episódios: a TMDB conta no number_of_seasons as já anunciadas, sem episódios.
+    seasons: raw.seasons
+      ? raw.seasons.filter((season) => season.season_number >= 1 && season.episode_count > 0).length
+      : (raw.number_of_seasons ?? 0),
     releaseDate: raw.release_date || raw.first_air_date || null,
     brazilReleaseDate: brazilTheatricalDate(raw.release_dates?.results ?? []),
     trailers: pickTrailers(raw.videos?.results ?? []),

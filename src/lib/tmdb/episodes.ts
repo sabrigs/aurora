@@ -70,7 +70,8 @@ export async function getSeriesSeasons(id: number): Promise<SeriesSeasons> {
   const raw = await tmdbFetch<RawSeries>(`/tv/${id}`);
 
   const seasons = (raw.seasons ?? [])
-    .filter((season) => season.season_number >= 1)
+    // Temporada anunciada, ainda sem episódios (episode_count 0), não entra: não há o que acompanhar.
+    .filter((season) => season.season_number >= 1 && season.episode_count > 0)
     .map((season) => ({
       seasonNumber: season.season_number,
       name: season.name,
