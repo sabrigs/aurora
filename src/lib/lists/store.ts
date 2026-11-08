@@ -1,6 +1,7 @@
 // Acesso às listas do usuário no Supabase (RLS garante que só o dono lê e altera).
 // As regras entre listas também são validadas no banco pelo trigger `list_items_enforce_rules`.
 import { supabase } from '../supabase.js';
+import { getWatchedEpisodes } from './progress';
 
 export type SystemKind = 'to_watch' | 'watching' | 'watched' | 'favorites';
 export type MediaType = 'movie' | 'tv';
@@ -25,6 +26,8 @@ export interface StreamingRow {
 }
 
 export const LISTS_CHANGED_EVENT = 'aurora:lists-changed';
+// Disparado quando o status de uma série muda pelo progresso dos episódios (detail: { tmdbId, mediaType }).
+export const TITLE_STATUS_EVENT = 'aurora:title-status-changed';
 
 // Cache em memória das listas. Vale durante a sessão da aba (a navegação não recarrega o JS),
 // e é descartado sempre que uma lista muda.
@@ -175,6 +178,36 @@ export const markWatched = async (ref: TitleRef) => {
 export const removeFromWatched = async (ref: TitleRef) => {
   await deleteItem('watched', ref);
   notifyListsChanged();
+};
+
+export interface SeriesProgressInfo {
+  // Episódios já lançados (a TMDB não conta a temporada 0).
+  airedTotal: number;
+  // Série encerrada: sem episódios novos a caminho.
+  ended: boolean;
+}
+
+// Status da série a partir do progresso dos episódios:
+// nenhum marcado → "To watch"; alguns → "Watching"; todos os lançados → "Watched" se a série
+// terminou, ou "Watching" (em dia) se ainda está no ar. Série fora das listas só entra ao marcar o primeiro episódio.
+export const syncSeriesStatus = async (ref: TitleRef, info: SeriesProgressInfo) => {
+  const [watched, status] = await Promise.all([getWatchedEpisodes(ref.tmdbId), getTitleStatus(ref)]);
+  const current = (['to_watch', 'watching', 'watched'] as const).find((kind) => status.has(kind)) ?? null;
+
+  const count = watched.size;
+  const complete = info.airedTotal > 0 && count >= info.airedTotal;
+  const target: SystemKind | null =
+    count === 0 ? (current ? 'to_watch' : null) : complete && info.ended ? 'watched' : 'watching';
+
+  if (!target || target === current) return;
+
+  // Delete antes do insert: o banco não aceita o título em duas dessas listas ao mesmo tempo.
+  if (current) await deleteItem(current, ref);
+  await insertItem(target, ref);
+  notifyListsChanged();
+  window.dispatchEvent(
+    new CustomEvent(TITLE_STATUS_EVENT, { detail: { tmdbId: ref.tmdbId, mediaType: ref.mediaType } }),
+  );
 };
 
 // "Mark as favorite": favorito exige "Watched". Se o título ainda estiver em "To watch",

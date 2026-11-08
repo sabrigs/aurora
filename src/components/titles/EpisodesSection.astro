@@ -1,0 +1,342 @@
+---
+// Seção "Episodes" da página de uma série: progresso geral e um acordeão por temporada.
+// Os episódios de cada temporada são carregados ao abrir; o progresso vem do Supabase no cliente.
+import type { SeasonSummary } from '../../lib/tmdb/episodes';
+
+interface Props {
+  tmdbId: number;
+  title: string;
+  posterPath: string | null;
+  seasons: SeasonSummary[];
+  airedTotal: number;
+  ended: boolean;
+}
+
+const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
+---
+
+<section
+  class="block episodes"
+  aria-labelledby="episodes"
+  data-episodes
+  data-tmdb-id={tmdbId}
+  data-title={title}
+  data-poster-path={posterPath ?? ''}
+  data-aired-total={airedTotal}
+  data-ended={ended ? 'true' : 'false'}
+>
+  <div class="episodes-head">
+    <h2 id="episodes">Episodes</h2>
+    <span class="episodes-label" data-progress-label aria-live="polite"></span>
+  </div>
+  <div class="episodes-progress" role="progressbar" aria-label="Series progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progress-bar>
+    <span data-progress-fill></span>
+  </div>
+  <p class="episodes-note" data-note hidden></p>
+
+  <div class="seasons">
+    {seasons.map((season) => (
+      <details class="season" data-season={season.seasonNumber} data-episode-count={season.episodeCount}>
+        <summary>
+          <span class="season-name">Season {season.seasonNumber}</span>
+          <span class="season-progress" data-season-progress>0/{season.episodeCount}</span>
+          <svg class="season-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </summary>
+        <div class="season-body">
+          <button type="button" class="season-action" data-mark-season hidden>Mark season as watched</button>
+          <p class="season-loading" data-loading hidden></p>
+          <ul class="episode-list" data-list></ul>
+        </div>
+      </details>
+    ))}
+  </div>
+</section>
+
+<script>
+  import { initEpisodes } from '../../lib/lists/episodes-ui';
+
+  // A navegação troca a página sem recarregar o script: inicializa a cada visita.
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-episodes]').forEach((root) => initEpisodes(root));
+  });
+</script>
+
+<!-- Global: os episódios são criados no cliente e não recebem o escopo de estilos do Astro. -->
+<style is:global>
+	.episodes {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.episodes h2 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.episodes-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.episodes-label {
+		font-size: 0.9375rem;
+		color: var(--color-text-muted);
+	}
+
+	.episodes-progress {
+		height: 6px;
+		border-radius: 999px;
+		background-color: var(--color-surface-raised);
+		overflow: hidden;
+	}
+
+	.episodes-progress > span {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: inherit;
+		background-color: var(--color-success-solid);
+		transition: width 200ms ease-out;
+	}
+
+	.episodes-note {
+		margin: 0;
+		font-size: 0.9375rem;
+		color: var(--color-text-muted);
+	}
+
+	.seasons {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.season {
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		background-color: var(--color-surface);
+		overflow: hidden;
+	}
+
+	.season > summary {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 52px;
+		padding: 0 16px;
+		cursor: pointer;
+		list-style: none;
+		color: var(--color-text);
+		font-weight: 600;
+	}
+
+	.season > summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.season-name {
+		flex: 1;
+	}
+
+	.season-progress {
+		font-size: 0.9375rem;
+		font-weight: 400;
+		color: var(--color-text-muted);
+	}
+
+	.season.is-complete .season-progress {
+		color: var(--color-success-text);
+	}
+
+	.season-chevron {
+		color: var(--color-text-muted);
+		transition: transform 150ms ease-out;
+	}
+
+	.season[open] .season-chevron {
+		transform: rotate(180deg);
+	}
+
+	.season-body {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 0 16px 16px;
+	}
+
+	.season-action {
+		align-self: flex-start;
+		height: 40px;
+		padding: 0 16px;
+		border: 1px solid var(--color-border-strong);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--color-text);
+		font: inherit;
+		font-size: 0.9375rem;
+		cursor: pointer;
+	}
+
+	.season-action:hover:not(:disabled) {
+		background-color: var(--color-surface-hover);
+	}
+
+	.season-action:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+
+	.season-loading {
+		margin: 0;
+		color: var(--color-text-muted);
+	}
+
+	.episode-list {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.episode {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 12px 0;
+		border-top: 1px solid var(--color-border);
+	}
+
+	.episode:first-child {
+		border-top: 0;
+	}
+
+	.episode.is-upcoming {
+		opacity: 0.6;
+	}
+
+	/* Checkbox customizado; a área de toque tem 44px. */
+	.episode-check {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 44px;
+		height: 44px;
+		margin: -8px 0 -8px -10px;
+		cursor: pointer;
+	}
+
+	.episode-check input {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		cursor: inherit;
+	}
+
+	.episode-check input:disabled {
+		cursor: not-allowed;
+	}
+
+	.episode-box {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border: 2px solid var(--color-border-strong);
+		border-radius: 999px;
+		color: transparent;
+		transition: background-color 120ms, border-color 120ms, color 120ms;
+	}
+
+	.episode-check input:checked + .episode-box {
+		border-color: var(--color-success-solid);
+		background-color: var(--color-success-solid);
+		color: #fff;
+	}
+
+	.episode-check input:focus-visible + .episode-box {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
+	}
+
+	.episode-still {
+		flex: 0 0 auto;
+		width: 112px;
+		aspect-ratio: 16 / 9;
+		border-radius: 8px;
+		background-color: var(--color-surface-raised);
+		overflow: hidden;
+	}
+
+	.episode-still img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.episode-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.episode-text p {
+		margin: 0;
+	}
+
+	.episode-title {
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.episode-meta {
+		font-size: 0.875rem;
+		color: var(--color-text-muted);
+	}
+
+	.episode-overview {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		font-size: 0.9375rem;
+		color: var(--color-text-muted);
+	}
+
+	.episode-upto {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		margin: -8px -10px -8px 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-muted);
+		cursor: pointer;
+	}
+
+	.episode-upto:hover {
+		color: var(--color-text);
+	}
+
+	/* Mobile: sem o still, para o texto ter espaço. */
+	@media (max-width: 599px) {
+		.episode-still {
+			display: none;
+		}
+	}
+</style>

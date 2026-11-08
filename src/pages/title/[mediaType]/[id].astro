@@ -1,6 +1,8 @@
 ---
 import AppLayout from '../../../layouts/AppLayout.astro';
 import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
+import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
+import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
 import { cardMetaParts } from '../../../lib/tmdb/format';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
@@ -17,11 +19,14 @@ if ((mediaType !== 'movie' && mediaType !== 'tv') || !Number.isInteger(id)) {
 let details: TitleDetails;
 let providers: StreamingProvider[];
 let inTheaters: boolean;
+// Temporadas só existem para séries; se a TMDB falhar, a seção Episodes some e o resto da página segue.
+let series: SeriesSeasons | null;
 try {
-	[details, providers, inTheaters] = await Promise.all([
+	[details, providers, inTheaters, series] = await Promise.all([
 		getTitleDetails(mediaType as MediaType, id),
 		getTitleStreamingProviders(mediaType as MediaType, id).catch(() => []),
 		isInBrazilTheaters(mediaType as MediaType, id).catch(() => false),
+		mediaType === 'tv' ? getSeriesSeasons(id).catch(() => null) : null,
 	]);
 } catch {
 	return Astro.redirect('/');
@@ -113,6 +118,17 @@ const poster = posterUrl(details.posterPath, 'w342');
 					<h2 id="about">About</h2>
 					<p class="about">{details.overview}</p>
 				</section>
+			)}
+
+			{series && series.airedEpisodeCount > 0 && (
+				<EpisodesSection
+					tmdbId={details.id}
+					title={details.title}
+					posterPath={details.posterPath}
+					seasons={series.seasons.filter((season) => season.episodeCount > 0)}
+					airedTotal={series.airedEpisodeCount}
+					ended={series.ended}
+				/>
 			)}
 
 			{details.trailers.length > 0 && (

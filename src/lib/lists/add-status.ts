@@ -10,6 +10,7 @@ import {
   removeFromToWatch,
   removeFromWatched,
   removeFromWatching,
+  TITLE_STATUS_EVENT,
   type SystemKind,
   type TitleRef,
 } from './store';
@@ -140,6 +141,19 @@ export const initAddStatus = async (root: HTMLElement) => {
   });
 
   badge.addEventListener('click', () => openPopover(dialog, badge));
+
+  // O progresso dos episódios pode mudar o status da série: atualiza o badge sem recarregar.
+  const onStatusChanged = (event: Event) => {
+    if (!root.isConnected) {
+      window.removeEventListener(TITLE_STATUS_EVENT, onStatusChanged);
+      return;
+    }
+    const detail = (event as CustomEvent<{ tmdbId: number; mediaType: string }>).detail;
+    if (detail.tmdbId === ref.tmdbId && detail.mediaType === ref.mediaType) {
+      void refresh().catch(console.error);
+    }
+  };
+  window.addEventListener(TITLE_STATUS_EVENT, onStatusChanged);
 
   try {
     await refresh();
