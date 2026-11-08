@@ -37,6 +37,8 @@ const name = LIST_NAMES[kind];
 			<div class="menu">
 				<p class="menu-section-title">Streaming</p>
 				<div id="streaming-options" class="menu"></div>
+				<p class="menu-section-title">Status</p>
+				<div id="status-options" class="menu"></div>
 				<p class="menu-section-title">Order</p>
 				<div id="order-options" class="menu"></div>
 			</div>
@@ -78,7 +80,7 @@ const name = LIST_NAMES[kind];
 		import { fetchAiredEpisodes } from '../../lib/lists/series-flows';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
-		import { setCardMeta, setCardStatus } from '../../lib/tmdb/format';
+		import { seriesStatusTag, setCardMeta, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
@@ -96,11 +98,23 @@ const name = LIST_NAMES[kind];
 		const filterButton = document.getElementById('filter-button') as HTMLButtonElement;
 		const filterMenu = document.getElementById('filter-menu') as HTMLDialogElement;
 		const streamingOptions = document.getElementById('streaming-options') as HTMLDivElement;
+		const statusOptions = document.getElementById('status-options') as HTMLDivElement;
 		const orderOptions = document.getElementById('order-options') as HTMLDivElement;
 
 		type Order = 'newest' | 'oldest';
+		type StatusTone = SeriesStatusTag['tone'];
 
-		const state: { streamingBrand: string | null; order: Order } = { streamingBrand: null, order: 'newest' };
+		const STATUS_FILTERS: { tone: StatusTone; label: string }[] = [
+			{ tone: 'ongoing', label: 'Ongoing' },
+			{ tone: 'ended', label: 'Ended' },
+			{ tone: 'canceled', label: 'Canceled' },
+		];
+
+		const state: { streamingBrand: string | null; status: StatusTone | null; order: Order } = {
+			streamingBrand: null,
+			status: null,
+			order: 'newest',
+		};
 		const STATE_KEY = `aurora:list:${kind}`;
 		let items: ListItem[] = [];
 		let streamings: StreamingRow[] = [];
@@ -124,12 +138,24 @@ const name = LIST_NAMES[kind];
 		};
 
 		const applyFilters = async (): Promise<ListItem[]> => {
-			const ordered = state.order === 'newest' ? items : [...items].reverse();
-			if (state.streamingBrand === null) return ordered;
+			let result = state.order === 'newest' ? items : [...items].reverse();
 
-			const selected = state.streamingBrand;
-			const matches = await Promise.all(ordered.map((item) => brandsFor(item)));
-			return ordered.filter((_, index) => matches[index].has(selected));
+			if (state.streamingBrand !== null) {
+				const selected = state.streamingBrand;
+				const matches = await Promise.all(result.map((item) => brandsFor(item)));
+				result = result.filter((_, index) => matches[index].has(selected));
+			}
+
+			// Situação da série (Ongoing, Ended, Canceled): filmes e títulos sem situação ficam de fora.
+			if (state.status !== null) {
+				const selected = state.status;
+				const details = await Promise.all(result.map((item) => loadSummary(item)));
+				result = result.filter(
+					(item, index) => seriesStatusTag(item.mediaType, details[index]?.status)?.tone === selected,
+				);
+			}
+
+			return result;
 		};
 
 		const cardTemplate = document.getElementById('card-template') as HTMLTemplateElement;
@@ -232,6 +258,11 @@ const name = LIST_NAMES[kind];
 				}),
 			);
 
+			statusOptions.replaceChildren(
+				option('All statuses', state.status === null, () => chooseStatus(null)),
+				...STATUS_FILTERS.map(({ tone, label }) => option(label, state.status === tone, () => chooseStatus(tone))),
+			);
+
 			orderOptions.replaceChildren(
 				option('Newest', state.order === 'newest', () => chooseOrder('newest')),
 				option('Oldest', state.order === 'oldest', () => chooseOrder('oldest')),
@@ -245,6 +276,13 @@ const name = LIST_NAMES[kind];
 			await renderGrid();
 		};
 
+		// Status também é seleção única.
+		const chooseStatus = async (status: StatusTone | null) => {
+			state.status = status;
+			renderMenu();
+			await renderGrid();
+		};
+
 		const chooseOrder = async (order: Order) => {
 			state.order = order;
 			renderMenu();
@@ -253,6 +291,7 @@ const name = LIST_NAMES[kind];
 
 		document.getElementById('clear-filters')?.addEventListener('click', async () => {
 			state.streamingBrand = null;
+			state.status = null;
 			state.order = 'newest';
 			renderMenu();
 			await renderGrid();
