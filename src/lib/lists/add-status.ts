@@ -11,16 +11,32 @@ import {
   type SystemKind,
   type TitleRef,
 } from './store';
+import { WebHaptics } from 'web-haptics';
 import { enableLightDismiss, openPopover } from '../ui/popover';
+
+// Em telas de toque o feedback é tátil; no desktop (mouse) a lib toca um clique de áudio no lugar.
+const haptics = new WebHaptics({
+  debug: typeof matchMedia === 'function' && !matchMedia('(pointer: coarse)').matches,
+});
+
+const svg = (body: string) =>
+  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+
+const ICONS = {
+  trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5" />'),
+  heart: svg('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z" />'),
+  heartBroken: svg('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z" /><path d="M12 7.4l-2 3.6 3 2-1.5 3.5" />'),
+} as const;
 
 type Action = (ref: TitleRef, status: Set<SystemKind>) => Promise<void>;
 
-const ACTIONS: Record<string, { label: string; run: Action }> = {
-  'remove-to-watch': { label: 'Remove from to watch', run: (ref) => removeFromToWatch(ref) },
-  'mark-watched': { label: 'Mark as watched', run: (ref) => markWatched(ref) },
-  'mark-favorite': { label: 'Mark as favorite', run: (ref, status) => markFavorite(ref, status) },
-  'remove-watched': { label: 'Remove from watched', run: (ref) => removeFromWatched(ref) },
-  'remove-favorite': { label: 'Remove from favorites', run: (ref) => removeFromFavorites(ref) },
+const ACTIONS: Record<string, { label: string; icon: string; run: Action }> = {
+  'remove-to-watch': { icon: ICONS.trash, label: 'Remove from to watch', run: (ref) => removeFromToWatch(ref) },
+  'mark-watched': { icon: ICONS.check, label: 'Mark as watched', run: (ref) => markWatched(ref) },
+  'mark-favorite': { icon: ICONS.heart, label: 'Mark as favorite', run: (ref, status) => markFavorite(ref, status) },
+  'remove-watched': { icon: ICONS.trash, label: 'Remove from watched', run: (ref) => removeFromWatched(ref) },
+  'remove-favorite': { icon: ICONS.heartBroken, label: 'Remove from favorites', run: (ref) => removeFromFavorites(ref) },
 };
 
 // Opções mudam conforme o estado atual do título.
@@ -71,7 +87,8 @@ export const initAddStatus = async (root: HTMLElement) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'menu-item';
-        button.textContent = ACTIONS[key].label;
+        button.innerHTML = `${ACTIONS[key].icon}<span></span>`;
+        button.querySelector('span')!.textContent = ACTIONS[key].label;
         button.addEventListener('click', () => runAction(key, status));
         return button;
       }),
@@ -86,6 +103,7 @@ export const initAddStatus = async (root: HTMLElement) => {
 
   const runAction = async (key: string, status: Set<SystemKind>) => {
     const buttons = itemsBox.querySelectorAll<HTMLButtonElement>('button');
+    haptics.trigger('success');
     buttons.forEach((button) => (button.disabled = true));
     try {
       await ACTIONS[key].run(ref, status);
@@ -98,6 +116,7 @@ export const initAddStatus = async (root: HTMLElement) => {
   };
 
   addButton.addEventListener('click', async () => {
+    haptics.trigger('success');
     addButton.disabled = true;
     try {
       await addToWatch(ref);

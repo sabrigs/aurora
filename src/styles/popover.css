@@ -109,6 +109,10 @@ dialog.popover[open] {
   cursor: not-allowed;
 }
 
+.menu-item svg {
+  flex: 0 0 auto;
+}
+
 .menu-item img {
   border-radius: 6px;
 }

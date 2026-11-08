@@ -24,7 +24,7 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     <span>Add</span>
   </button>
   <button type="button" class="status-badge" data-badge hidden aria-haspopup="dialog" aria-label={`${title} is in your lists. Open options`}>
-    <span aria-hidden="true">✓</span>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
   </button>
   <dialog class="popover" data-menu aria-label={`Options for ${title}`}>
     <div class="menu" data-menu-items></div>
@@ -38,7 +38,7 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
 
   .add-button,
   .status-badge {
-    height: 36px;
+    height: 48px;
     border-radius: 999px;
     font-size: 0.9375rem;
     cursor: pointer;
@@ -49,7 +49,8 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 0 16px;
+    width: 79px;
+    padding: 0;
     line-height: 1;
     border: 0;
     /* Translúcido: funciona sobre backdrops e sobre o fundo da página. */
@@ -65,11 +66,15 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   }
 
   .status-badge {
-    width: 36px;
-    border: 1px solid var(--color-success-border);
-    background-color: var(--color-success-solid);
-    color: var(--color-on-solid);
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    padding: 0;
+    border: 0;
+    /* Radix grass */
+    background-color: #3e9b4f;
+    color: #fff;
   }
 
   .status-badge.is-entering {
