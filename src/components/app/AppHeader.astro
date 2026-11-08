@@ -98,8 +98,10 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		left: 0;
 		right: 0;
 		z-index: 20;
-		height: 64px;
-		padding-inline: 16px;
+		box-sizing: border-box;
+		height: var(--header-height);
+		/* 16px em cima e embaixo: os itens de 48px ocupam a altura toda (80px). */
+		padding: 16px;
 		background-color: var(--color-bg);
 	}
 
@@ -212,7 +214,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		.header-search {
 			display: none;
 			position: fixed;
-			top: 64px;
+			top: var(--header-height);
 			left: 16px;
 			right: 16px;
 			transform: none;

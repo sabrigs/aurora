@@ -11,9 +11,11 @@ interface Props {
 	fullWidth?: boolean;
 	// Tela só para quem está logado: sem sessão guardada, vai ao login antes de pintar a tela.
 	requireAuth?: boolean;
+	// Conteúdo colado na navbar, sem o espaço de 24px entre os dois.
+	flushTop?: boolean;
 }
 
-const { fullWidth = false, requireAuth = false } = Astro.props;
+const { fullWidth = false, requireAuth = false, flushTop = false } = Astro.props;
 
 // Dados para a proteção inline (roda no <head>, antes da primeira pintura).
 const gate = {
@@ -66,7 +68,7 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 	<div transition:persist="app-header">
 		<AppHeader />
 	</div>
-	<main class:list={['app-main', { 'app-main--full': fullWidth, 'app-main--no-nav': !showBottomNav }]}>
+	<main class:list={['app-main', { 'app-main--full': fullWidth, 'app-main--no-nav': !showBottomNav, 'app-main--flush-top': flushTop }]}>
 		<slot />
 	</main>
 	<div transition:persist="bottom-nav">
@@ -75,6 +77,11 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 </Layout>
 
 <style is:global>
+	/* Altura da navbar fixa: 16px de padding + itens de 48px. Quem fica sob a navbar usa esta variável. */
+	:root {
+		--header-height: 80px;
+	}
+
 	html[data-guard] body {
 		visibility: hidden;
 	}
@@ -88,20 +95,25 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 	/* Mobile: a barra de busca aberta ocupa o espaço logo abaixo da navbar. */
 	@media (max-width: 767px) {
 		html[data-search-open] .app-main {
-			padding-top: calc(64px + 24px + 56px);
+			padding-top: calc(var(--header-height) + 24px + 56px);
 		}
 	}
 </style>
 
 <style>
 	.app-main {
-		padding: calc(64px + 24px) 16px 112px;
+		padding: calc(var(--header-height) + 24px) 16px 112px;
 		max-width: 1100px;
 		margin-inline: auto;
 	}
 
 	.app-main--full {
 		max-width: none;
+	}
+
+	/* A busca aberta no mobile (regra global acima) continua tendo prioridade. */
+	.app-main--flush-top {
+		padding-top: var(--header-height);
 	}
 
 	/* Sem toolbar, a página não reserva espaço para ela no rodapé. */

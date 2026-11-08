@@ -427,9 +427,9 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		/* Fica sob a navbar fixa (64px) quando a barra chega ao topo da tela. */
+		/* Fica sob a navbar fixa quando a barra chega ao topo da tela. */
 		position: sticky;
-		top: 72px;
+		top: calc(var(--header-height) + 8px);
 		z-index: 10;
 		width: fit-content;
 		max-width: 100%;
