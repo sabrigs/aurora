@@ -69,12 +69,27 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 	<main class:list={['app-main', { 'app-main--full': fullWidth, 'app-main--no-nav': !showBottomNav }]}>
 		<slot />
 	</main>
-	{showBottomNav && <BottomNav />}
+	<div transition:persist="bottom-nav">
+		<BottomNav />
+	</div>
 </Layout>
 
 <style is:global>
 	html[data-guard] body {
 		visibility: hidden;
+	}
+
+	/* Modo busca: só o resultado aparece, sem listas nem abas. */
+	html[data-search='on'] .home .lists,
+	html[data-search='on'] .explore-bar {
+		display: none;
+	}
+
+	/* Mobile: a barra de busca aberta ocupa o espaço logo abaixo da navbar. */
+	@media (max-width: 767px) {
+		html[data-search-open] .app-main {
+			padding-top: calc(64px + 24px + 56px);
+		}
 	}
 </style>
 

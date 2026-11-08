@@ -2,7 +2,7 @@
 import AppLayout from '../../../layouts/AppLayout.astro';
 import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
-import { cardMeta } from '../../../lib/tmdb/format';
+import { cardMetaParts } from '../../../lib/tmdb/format';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
 import type { MediaType } from '../../../lib/tmdb/client';
@@ -159,7 +159,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" />}
 									<div class="title-card__text">
 										<h3 class="title-card__title">{item.title}</h3>
-										<p class="title-card__meta">{cardMeta(item)}</p>
+										<p class="title-card__meta">{cardMetaParts(item).map((part) => <span>{part}</span>)}</p>
 									</div>
 								</div>
 								<AddStatusButton tmdbId={item.id} mediaType={item.mediaType} title={item.title} posterPath={item.posterPath} />

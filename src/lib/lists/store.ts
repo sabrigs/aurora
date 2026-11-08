@@ -29,7 +29,7 @@ export const LISTS_CHANGED_EVENT = 'aurora:lists-changed';
 // Cache em memória das listas. Vale durante a sessão da aba (a navegação não recarrega o JS),
 // e é descartado sempre que uma lista muda.
 const CACHE_TTL_MS = 5 * 60 * 1000;
-let summaryCache: { value: Promise<ListSummary[]>; expires: number } | null = null;
+let summaryCache: { value: Promise<ListSummary[]>; expires: number; resolved?: ListSummary[] } | null = null;
 const itemsCache = new Map<SystemKind, { value: Promise<ListItem[]>; expires: number }>();
 
 const invalidateListCache = () => {
@@ -186,12 +186,22 @@ export function getListSummaries(): Promise<ListSummary[]> {
   }
 
   const value = fetchListSummaries();
-  summaryCache = { value, expires: Date.now() + CACHE_TTL_MS };
+  const entry = { value, expires: Date.now() + CACHE_TTL_MS, resolved: undefined as ListSummary[] | undefined };
+  summaryCache = entry;
+  void value.then((summaries) => {
+    entry.resolved = summaries;
+  }, () => {});
   // Falha não fica em cache: a próxima visita tenta de novo.
   value.catch(() => {
     summaryCache = null;
   });
   return value;
+}
+
+// Resumo já em cache (resposta pronta), para pintar os cards na hora, sem skeleton.
+export function peekListSummaries(): ListSummary[] | null {
+  if (summaryCache?.resolved && summaryCache.expires > Date.now()) return summaryCache.resolved;
+  return null;
 }
 
 async function fetchListSummaries(): Promise<ListSummary[]> {

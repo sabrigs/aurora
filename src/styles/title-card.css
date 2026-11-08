@@ -1,21 +1,14 @@
-/* Card de título: usado no Explore e nas listas. Fundo é o backdrop do título. */
 .title-card {
 	position: relative;
 	isolation: isolate;
-	/* 3 colunas: 300px de altura; com 2 ou 1 coluna: 250px. */
-	height: 300px;
+	height: 420px;
 	border-radius: 16px;
 	clip-path: inset(0 round 16px);
 	overflow: hidden;
 	background-color: var(--color-surface-raised);
 	background-size: cover;
 	background-position: center;
-}
-
-@media (max-width: 1023px) {
-	.title-card {
-		height: 250px;
-	}
+	border: 2px solid #2B2B2B;
 }
 
 .title-card::after {
@@ -23,7 +16,22 @@
 	position: absolute;
 	inset: 0;
 	border-radius: inherit;
-	background: linear-gradient(180deg, #00000000 35%, #000000cc 100%);
+	background: linear-gradient(180deg, #00000030 0%, #00000020 40%, #000000b0 100%);
+	pointer-events: none;
+}
+
+/* Blur só na parte de baixo, com transição suave: a máscara faz o efeito aparecer aos poucos. */
+.title-card::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 65%;
+	-webkit-backdrop-filter: blur(10.5px);
+	backdrop-filter: blur(10.5px);
+	-webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 70%);
+	mask-image: linear-gradient(180deg, transparent 0%, #000 70%);
 	pointer-events: none;
 }
 
@@ -47,11 +55,10 @@
 	color: #fff;
 }
 
-/* Pôster do título por cima do backdrop, no canto esquerdo. */
 .title-card__poster {
 	flex: 0 0 auto;
-	width: 100px;
-	aspect-ratio: 2 / 3;
+	width: 120px;
+	height: 160px;
 	border-radius: 4px;
 	object-fit: cover;
 	background-color: var(--color-surface-raised);
@@ -71,12 +78,14 @@
 	font-size: 1.5rem;
 	font-weight: 600;
 	line-height: 1.2;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	/* Título longo quebra para a linha de baixo, sem reticências. */
+	overflow-wrap: anywhere;
 }
 
 .title-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 16px;
 	margin: 4px 0 0;
 	font-size: 0.9375rem;
 	color: #ffffffcc;

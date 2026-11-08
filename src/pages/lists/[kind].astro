@@ -73,7 +73,7 @@ const name = LIST_NAMES[kind];
 		import { apiFetch } from '../../lib/api';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
-		import { cardMeta } from '../../lib/tmdb/format';
+		import { setCardMeta } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
@@ -159,7 +159,7 @@ const name = LIST_NAMES[kind];
 			node.querySelector<HTMLElement>('.title-card__title')!.textContent = item.title;
 
 			const meta = node.querySelector<HTMLElement>('.title-card__meta')!;
-			meta.textContent = cardMeta({ mediaType: item.mediaType });
+			setCardMeta(meta, { mediaType: item.mediaType });
 
 			// Enquanto o backdrop não chega, usa o pôster como fundo.
 			const poster = posterUrl(item.posterPath, 'w500');
@@ -170,7 +170,7 @@ const name = LIST_NAMES[kind];
 				if (summary.backdropPath) {
 					node.style.backgroundImage = `url("https://image.tmdb.org/t/p/w780${summary.backdropPath}")`;
 				}
-				meta.textContent = cardMeta({ mediaType: item.mediaType, ...summary });
+				setCardMeta(meta, { mediaType: item.mediaType, ...summary });
 			});
 
 			return node;
@@ -290,9 +290,7 @@ const name = LIST_NAMES[kind];
 
 	.list-title h1 {
 		margin: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		overflow-wrap: anywhere;
 		font-size: 1.25rem;
 		font-weight: 600;
 		color: var(--color-text);

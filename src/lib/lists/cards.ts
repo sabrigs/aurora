@@ -1,6 +1,6 @@
 // Cards de lista (Home e My lists): proteção da rota e preenchimento com os dados do usuário.
 import { supabase } from '../supabase.js';
-import { getListSummaries, LISTS_CHANGED_EVENT, type ListSummary } from './store';
+import { getListSummaries, LISTS_CHANGED_EVENT, peekListSummaries, type ListSummary } from './store';
 import { posterUrl } from '../tmdb/images';
 import { releaseGate, rememberOnboarded } from '../auth/gate';
 
@@ -81,6 +81,8 @@ const refresh = async () => {
 // Chamado a cada visita a uma tela com cards de lista.
 export function initListCards() {
   refreshCards = refresh;
+  // Dados já em cache: preenche na hora, sem passar pelo skeleton. O skeleton fica só para quem espera a request.
+  peekListSummaries()?.forEach(renderCard);
   void redirectIfNeeded().then((ok) => {
     if (ok) void refresh();
   });

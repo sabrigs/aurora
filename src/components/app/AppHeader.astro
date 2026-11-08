@@ -11,6 +11,18 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 
 <header class="app-header">
 	<a class="logo" href="/">Aurora</a>
+	<form class="header-search" role="search" data-header-search>
+		<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+			<circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none" />
+			<path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+		</svg>
+		<input id="header-search-input" type="search" placeholder="What you want to watch?" aria-label="Search titles or artists" autocomplete="off" />
+		<button type="button" class="header-search__clear" data-search-clear aria-label="Clear search">
+			<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+			</svg>
+		</button>
+	</form>
 	<nav class="desktop-nav" aria-label="Main">
 		<a href="/" aria-current={current('/')}>Home</a>
 		<a href="/lists" aria-current={current('/lists')}>My lists</a>
@@ -37,6 +49,43 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 
 	markCurrentPage();
 	document.addEventListener('astro:page-load', markCurrentPage);
+
+	// Busca da navbar: campo na própria navbar (desktop) ou barra sob ela, aberta pela tab Search (mobile).
+	// Na Home, avisa o Explore a cada digitação; nas outras telas, Enter leva à Home com a busca feita.
+	import { announceSearch, clearSearch, setSearchOpen, setSearchQuery, syncSearchMode } from '../../lib/ui/search';
+
+	const searchForm = document.querySelector<HTMLFormElement>('[data-header-search]')!;
+	const searchInput = document.getElementById('header-search-input') as HTMLInputElement;
+	const isHome = () => window.location.pathname === '/';
+
+	searchInput.addEventListener('input', () => {
+		syncSearchMode();
+		if (isHome()) announceSearch(searchInput.value);
+	});
+
+	searchForm.addEventListener('submit', (event) => {
+		event.preventDefault();
+		const query = searchInput.value.trim();
+		if (!query) return;
+		if (isHome()) {
+			announceSearch(query, true);
+			searchInput.blur(); // fecha o teclado no mobile
+		} else {
+			window.location.href = `/?q=${encodeURIComponent(query)}`;
+		}
+	});
+
+	searchForm.querySelector('[data-search-clear]')!.addEventListener('click', clearSearch);
+
+	document.addEventListener('astro:page-load', () => {
+		if (!isHome()) {
+			// Fora da Home a busca não vale: zera o campo e o modo busca.
+			setSearchQuery('');
+			setSearchOpen(false);
+		} else if (new URLSearchParams(window.location.search).get('search') === '1') {
+			setSearchOpen(true);
+		}
+	});
 </script>
 
 <style>
@@ -60,6 +109,70 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		font-weight: 700;
 		color: var(--color-text);
 		text-decoration: none;
+	}
+
+	/* Centralizada na navbar, independente da largura do logo e do menu. */
+	.header-search {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		box-sizing: border-box;
+		width: 380px;
+		max-width: 36vw;
+		height: 48px;
+		padding-inline: 16px;
+		border: 2px solid #2b2b2b;
+		border-radius: 999px;
+		background-color: var(--color-surface);
+		color: var(--color-text-muted);
+	}
+
+	.header-search:focus-within {
+		border-color: var(--color-border-strong);
+	}
+
+	.header-search input {
+		flex: 1 1 auto;
+		min-width: 0;
+		height: 100%;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--color-text);
+		font: inherit;
+		font-size: 1.0625rem;
+		outline: none;
+	}
+
+	.header-search input::-webkit-search-cancel-button {
+		display: none;
+	}
+
+	.header-search__clear {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: 0;
+		border-radius: 999px;
+		background: none;
+		color: var(--color-text-muted);
+		cursor: pointer;
+	}
+
+	/* X aparece quando há texto. */
+	.header-search:has(input:not(:placeholder-shown)) .header-search__clear {
+		display: inline-flex;
+	}
+
+	.header-search input::placeholder {
+		color: var(--color-text-muted);
 	}
 
 	.desktop-nav {
@@ -93,6 +206,26 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	@media (max-width: 767px) {
 		.desktop-nav {
 			display: none;
+		}
+
+		/* Mobile: a busca é uma barra sob o header, aberta pela tab Search. */
+		.header-search {
+			display: none;
+			position: fixed;
+			top: 64px;
+			left: 16px;
+			right: 16px;
+			transform: none;
+			width: auto;
+			max-width: none;
+		}
+
+		:global(html[data-search-open]) .header-search {
+			display: flex;
+		}
+
+		:global(html[data-search-open]) .header-search__clear {
+			display: inline-flex;
 		}
 
 		.avatar-slot {
