@@ -4,7 +4,7 @@ import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
 import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
 import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
-import { cardMetaParts } from '../../../lib/tmdb/format';
+import { cardMetaParts, seriesStatusTag } from '../../../lib/tmdb/format';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
 import type { MediaType } from '../../../lib/tmdb/client';
@@ -55,13 +55,7 @@ const unreleasedMessage = !releaseDate
 const category = details.mediaType === 'movie' ? 'Movie' : 'Series';
 
 // Série: situação na TMDB (no ar, encerrada ou cancelada) e quantidade de temporadas (sem a temporada 0).
-const SERIES_STATUS: Record<string, { label: string; tone: 'ongoing' | 'ended' | 'canceled' }> = {
-	'Returning Series': { label: 'Ongoing', tone: 'ongoing' },
-	'In Production': { label: 'Ongoing', tone: 'ongoing' },
-	Ended: { label: 'Ended', tone: 'ended' },
-	Canceled: { label: 'Canceled', tone: 'canceled' },
-};
-const seriesStatus = details.mediaType === 'tv' ? (SERIES_STATUS[details.status] ?? null) : null;
+const seriesStatus = seriesStatusTag(details.mediaType, details.status);
 const seasonCount = series?.seasons.length ?? 0;
 const seasonsLabel = seasonCount > 0 ? `${seasonCount} ${seasonCount === 1 ? 'season' : 'seasons'}` : null;
 const duration = details.runtime
@@ -198,6 +192,9 @@ const poster = posterUrl(details.posterPath, 'w342');
 								<div class="title-card__info">
 									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" />}
 									<div class="title-card__text">
+										{seriesStatusTag(item.mediaType, item.status) && (
+											<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>
+										)}
 										<h3 class="title-card__title">{item.title}</h3>
 										<p class="title-card__meta">{cardMetaParts(item).map((part) => <span>{part}</span>)}</p>
 									</div>

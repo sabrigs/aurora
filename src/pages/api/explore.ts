@@ -51,9 +51,9 @@ export const GET: APIRoute = async ({ request, url }) => {
     result.items.map(async (item) => {
       try {
         const details = await getTitleDetails(item.mediaType, item.id);
-        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null };
+        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons };
       } catch {
-        return { ...item, runtime: null, genre: null };
+        return { ...item, runtime: null, genre: null, status: '', seasons: 0 };
       }
     }),
   );

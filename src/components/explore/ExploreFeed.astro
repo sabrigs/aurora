@@ -31,6 +31,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			<div class="title-card__info">
 				<img class="title-card__poster" alt="" hidden />
 				<div class="title-card__text">
+					<span class="title-card__status" hidden></span>
 					<h2 class="title-card__title"></h2>
 					<p class="title-card__meta"></p>
 				</div>
@@ -44,7 +45,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		import { apiFetch } from '../../lib/api';
 		import { initAddStatus } from '../../lib/lists/add-status';
 		import { posterUrl } from '../../lib/tmdb/images';
-		import { setCardMeta } from '../../lib/tmdb/format';
+		import { setCardMeta, setCardStatus } from '../../lib/tmdb/format';
 		import { setSearchOpen, setSearchQuery } from '../../lib/ui/search';
 		import { isReturningVisit, loadScreenState, onLeave, saveScreenState } from '../../lib/ui/navigation';
 
@@ -58,6 +59,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			voteAverage: number;
 			runtime?: number | null;
 			genre?: string | null;
+			status?: string;
+			seasons?: number;
 		};
 
 		const STATE_KEY = 'aurora:explore';
@@ -189,6 +192,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 
 			node.querySelector<HTMLElement>('.title-card__title')!.textContent = item.title;
 			setCardMeta(node.querySelector<HTMLElement>('.title-card__meta')!, item);
+			setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, item.status);
 
 			const root = node.querySelector<HTMLElement>('[data-add-status]')!;
 			root.dataset.tmdbId = String(item.id);

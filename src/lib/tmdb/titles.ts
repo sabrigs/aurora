@@ -162,6 +162,8 @@ export interface TitleDetails extends TitleSummary {
   // Lançamento: status da TMDB (ex.: "Released", "Post Production"), data global e, para filmes,
   // a data de estreia nos cinemas do Brasil (YYYY-MM-DD).
   status: string;
+  // Temporadas de uma série (sem a temporada 0); 0 para filmes.
+  seasons: number;
   releaseDate: string | null;
   brazilReleaseDate: string | null;
 }
@@ -178,6 +180,7 @@ interface RawDetails extends RawTitle {
   };
   created_by?: { id: number; name: string }[];
   status?: string;
+  number_of_seasons?: number;
   release_date?: string;
   first_air_date?: string;
   release_dates?: { results: { iso_3166_1: string; release_dates: { type: number; release_date: string }[] }[] };
@@ -228,6 +231,7 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
       profilePath: member.profile_path,
     })),
     status: raw.status ?? '',
+    seasons: raw.number_of_seasons ?? 0,
     releaseDate: raw.release_date || raw.first_air_date || null,
     brazilReleaseDate: brazilTheatricalDate(raw.release_dates?.results ?? []),
     trailers: pickTrailers(raw.videos?.results ?? []),
@@ -254,6 +258,9 @@ export async function getFullCast(mediaType: MediaType, id: number): Promise<Cas
 export interface RelatedTitle extends TitleSummary {
   runtime: number | null;
   genre: string | null;
+  // Situação da série na TMDB (ex.: "Ended"); vazia para filmes ou quando os detalhes falham.
+  status: string;
+  seasons: number;
 }
 
 interface RawCredit extends RawTitle {
@@ -288,9 +295,9 @@ export async function getSameDirectorTitles(
       const summary = toSummary(credit, mediaType);
       try {
         const details = await getTitleDetails(mediaType, credit.id);
-        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null };
+        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons };
       } catch {
-        return { ...summary, runtime: null, genre: null };
+        return { ...summary, runtime: null, genre: null, status: '', seasons: 0 };
       }
     }),
   );

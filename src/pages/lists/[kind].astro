@@ -61,6 +61,7 @@ const name = LIST_NAMES[kind];
 				<div class="title-card__info">
 					<img class="title-card__poster" alt="" hidden />
 					<div class="title-card__text">
+						<span class="title-card__status" hidden></span>
 						<h2 class="title-card__title"></h2>
 						<p class="title-card__meta"></p>
 						<p class="title-card__progress" hidden></p>
@@ -77,7 +78,7 @@ const name = LIST_NAMES[kind];
 		import { fetchAiredEpisodes } from '../../lib/lists/series-flows';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
-		import { setCardMeta } from '../../lib/tmdb/format';
+		import { setCardMeta, setCardStatus } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
@@ -134,7 +135,7 @@ const name = LIST_NAMES[kind];
 		const cardTemplate = document.getElementById('card-template') as HTMLTemplateElement;
 
 		// Backdrop e nota de cada título, buscados uma vez e reaproveitados.
-		const summaries = new Map<string, Promise<{ backdropPath: string | null; voteAverage: number; runtime: number | null; genre: string | null } | null>>();
+		const summaries = new Map<string, Promise<{ backdropPath: string | null; voteAverage: number; runtime: number | null; genre: string | null; status: string; seasons: number } | null>>();
 		const loadSummary = (item: ListItem) => {
 			const key = `${item.mediaType}:${item.tmdbId}`;
 			if (!summaries.has(key)) {
@@ -197,6 +198,7 @@ const name = LIST_NAMES[kind];
 					node.style.backgroundImage = `url("https://image.tmdb.org/t/p/w780${summary.backdropPath}")`;
 				}
 				setCardMeta(meta, { mediaType: item.mediaType, ...summary });
+				setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, summary.status);
 			});
 
 			return node;

@@ -27,6 +27,8 @@ export const GET: APIRoute = async ({ request, params }) => {
         voteAverage: details.voteAverage,
         runtime: details.runtime,
         genre: details.genres[0] ?? null,
+        status: details.status,
+        seasons: details.seasons,
       }),
       {
         headers: {
