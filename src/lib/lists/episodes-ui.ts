@@ -10,6 +10,7 @@ import {
   unmarkEpisodes,
   type EpisodeRef,
 } from './progress';
+import { fetchAiredEpisodes } from './series-flows';
 import { getTitleStatus, LISTS_CHANGED_EVENT, syncSeriesStatus, type TitleRef } from './store';
 
 interface Episode {
@@ -322,6 +323,24 @@ export function initEpisodes(root: HTMLElement) {
     root.classList.toggle('is-readonly', implicitAll);
     showNote(implicitAll ? 'You marked this series as watched.' : null);
     renderAll();
+
+    if (implicitAll) await materializeWatched();
+  };
+
+  // Série que já estava em "Watched" antes do controle de episódios: grava todos os episódios lançados como
+  // assistidos, para que dê para desmarcar um deles. Se falhar, a tela segue em modo somente leitura.
+  const materializeWatched = async () => {
+    try {
+      const aired = await fetchAiredEpisodes(ref.tmdbId);
+      await markEpisodesWatched(ref.tmdbId, aired.episodes);
+      watched = new Set(await getWatchedEpisodes(ref.tmdbId));
+      implicitAll = false;
+      root.classList.remove('is-readonly');
+      showNote(null);
+      renderAll();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const onListsChanged = () => {

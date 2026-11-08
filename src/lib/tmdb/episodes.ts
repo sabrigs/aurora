@@ -102,3 +102,36 @@ export async function getSeasonEpisodes(id: number, seasonNumber: number): Promi
     }))
     .sort((a, b) => a.episodeNumber - b.episodeNumber);
 }
+
+export interface AiredEpisode {
+  seasonNumber: number;
+  episodeNumber: number;
+}
+
+const SEASON_CONCURRENCY = 6;
+
+// Todos os episódios já lançados, em ordem (temporada, episódio). Usado para marcar a série inteira
+// e para achar o próximo episódio. Busca as temporadas em grupos pequenos para não estourar a cota da TMDB.
+export async function getAiredEpisodes(id: number): Promise<{ episodes: AiredEpisode[]; ended: boolean }> {
+  const { seasons, ended } = await getSeriesSeasons(id);
+  const today = new Date().toISOString().slice(0, 10);
+  const episodes: AiredEpisode[] = [];
+
+  for (let start = 0; start < seasons.length; start += SEASON_CONCURRENCY) {
+    const group = seasons.slice(start, start + SEASON_CONCURRENCY);
+    const results = await Promise.all(
+      group.map(async (season) => ({
+        seasonNumber: season.seasonNumber,
+        episodes: season.episodeCount > 0 ? await getSeasonEpisodes(id, season.seasonNumber) : [],
+      })),
+    );
+    for (const result of results) {
+      for (const episode of result.episodes) {
+        if (episode.airDate && episode.airDate <= today) {
+          episodes.push({ seasonNumber: result.seasonNumber, episodeNumber: episode.episodeNumber });
+        }
+      }
+    }
+  }
+  return { episodes, ended };
+}

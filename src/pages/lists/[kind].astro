@@ -63,6 +63,7 @@ const name = LIST_NAMES[kind];
 					<div class="title-card__text">
 						<h2 class="title-card__title"></h2>
 						<p class="title-card__meta"></p>
+						<p class="title-card__progress" hidden></p>
 					</div>
 				</div>
 			</article>
@@ -72,6 +73,8 @@ const name = LIST_NAMES[kind];
 	<script>
 		import { supabase } from '../../lib/supabase.js';
 		import { apiFetch } from '../../lib/api';
+		import { episodeKey, getWatchedEpisodes } from '../../lib/lists/progress';
+		import { fetchAiredEpisodes } from '../../lib/lists/series-flows';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
 		import { setCardMeta } from '../../lib/tmdb/format';
@@ -145,6 +148,17 @@ const name = LIST_NAMES[kind];
 			return summaries.get(key)!;
 		};
 
+		// Em "Watching", cada série mostra quantos episódios já viu e qual é o próximo.
+		const seriesProgress = async (item: ListItem) => {
+			const [aired, watched] = await Promise.all([fetchAiredEpisodes(item.tmdbId), getWatchedEpisodes(item.tmdbId)]);
+			const total = aired.episodes.length;
+			if (total === 0) return null;
+			const count = aired.episodes.filter((episode) => watched.has(episodeKey(episode))).length;
+			const next = aired.episodes.find((episode) => !watched.has(episodeKey(episode)));
+			const upNext = next ? `Next: S${next.seasonNumber}·E${next.episodeNumber}` : 'Up to date';
+			return `${count} of ${total} watched • ${upNext}`;
+		};
+
 		const renderCard = (item: ListItem) => {
 			const node = cardTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
 			const cover = node.querySelector<HTMLAnchorElement>('.title-card__cover')!;
@@ -165,6 +179,17 @@ const name = LIST_NAMES[kind];
 			// Enquanto o backdrop não chega, usa o pôster como fundo.
 			const poster = posterUrl(item.posterPath, 'w500');
 			if (poster) node.style.backgroundImage = `url("${poster}")`;
+
+			if (kind === 'watching' && item.mediaType === 'tv') {
+				const progress = node.querySelector<HTMLElement>('.title-card__progress')!;
+				seriesProgress(item)
+					.then((text) => {
+						if (!text) return;
+						progress.textContent = text;
+						progress.hidden = false;
+					})
+					.catch((error) => console.error(error));
+			}
 
 			void loadSummary(item).then((summary) => {
 				if (!summary) return;

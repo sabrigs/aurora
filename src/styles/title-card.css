@@ -91,6 +91,17 @@
 	color: #ffffffcc;
 }
 
+.title-card__progress {
+	margin: 4px 0 0;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: #fff;
+}
+
+.title-card__progress[hidden] {
+	display: none;
+}
+
 .title-card .add-status {
 	position: absolute;
 	top: 12px;

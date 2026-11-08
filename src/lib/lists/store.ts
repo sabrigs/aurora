@@ -1,7 +1,7 @@
 // Acesso às listas do usuário no Supabase (RLS garante que só o dono lê e altera).
 // As regras entre listas também são validadas no banco pelo trigger `list_items_enforce_rules`.
 import { supabase } from '../supabase.js';
-import { getWatchedEpisodes } from './progress';
+import { clearSeriesProgress, getWatchedEpisodes, invalidateWatchedCache, type EpisodeRef } from './progress';
 
 export type SystemKind = 'to_watch' | 'watching' | 'watched' | 'favorites';
 export type MediaType = 'movie' | 'tv';
@@ -208,6 +208,28 @@ export const syncSeriesStatus = async (ref: TitleRef, info: SeriesProgressInfo) 
   window.dispatchEvent(
     new CustomEvent(TITLE_STATUS_EVENT, { detail: { tmdbId: ref.tmdbId, mediaType: ref.mediaType } }),
   );
+};
+
+// Série inteira como assistida, numa única transação no banco (função mark_series_watched):
+// grava os episódios lançados e move a série de "To watch"/"Watching" para "Watched".
+export const markSeriesWatched = async (ref: TitleRef, airedEpisodes: EpisodeRef[]) => {
+  const { error } = await supabase.rpc('mark_series_watched', {
+    p_tmdb_id: ref.tmdbId,
+    p_title: ref.title,
+    p_poster_path: ref.posterPath,
+    p_episodes: airedEpisodes.map((episode) => ({ s: episode.seasonNumber, e: episode.episodeNumber })),
+  });
+  if (error) throw error;
+  invalidateWatchedCache(ref.tmdbId);
+  notifyListsChanged();
+};
+
+// Remove a série de uma lista e apaga o progresso dos episódios. O progresso sai primeiro:
+// se a segunda etapa falhar, a série continua na lista, só sem episódios marcados.
+export const removeSeriesFromList = async (kind: SystemKind, ref: TitleRef) => {
+  await clearSeriesProgress(ref.tmdbId);
+  await deleteItem(kind, ref);
+  notifyListsChanged();
 };
 
 // "Mark as favorite": favorito exige "Watched". Se o título ainda estiver em "To watch",

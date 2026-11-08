@@ -23,6 +23,9 @@ const notifyChanged = (tmdbId: number) => {
   window.dispatchEvent(new CustomEvent(EPISODES_CHANGED_EVENT, { detail: { tmdbId } }));
 };
 
+// Descarta o cache e avisa a tela quando o progresso mudou por fora deste módulo (ex.: função do banco).
+export const invalidateWatchedCache = (tmdbId: number) => notifyChanged(tmdbId);
+
 async function currentUserId(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;

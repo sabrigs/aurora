@@ -14,6 +14,7 @@ import {
   type SystemKind,
   type TitleRef,
 } from './store';
+import { SERIES_INTERCEPTS } from './series-flows';
 import { WebHaptics } from 'web-haptics';
 import { enableLightDismiss, openPopover } from '../ui/popover';
 
@@ -118,7 +119,10 @@ export const initAddStatus = async (root: HTMLElement) => {
     haptics.trigger('success');
     buttons.forEach((button) => (button.disabled = true));
     try {
-      await ACTIONS[key].run(ref, status);
+      // Séries têm fluxos próprios quando a ação mexe no progresso dos episódios (com confirmação).
+      const intercept = ref.mediaType === 'tv' ? SERIES_INTERCEPTS[key] : undefined;
+      const handled = intercept ? await intercept(ref, status, () => dialog.close()) : false;
+      if (!handled) await ACTIONS[key].run(ref, status);
       dialog.close();
     } catch (error) {
       console.error(error);

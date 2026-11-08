@@ -234,3 +234,87 @@ html:has(dialog.popover[open]) {
   margin-left: auto;
   color: var(--color-text-muted);
 }
+
+/* Diálogo de confirmação (ver lib/ui/confirm.ts). Desktop: centralizado; mobile: bottom sheet do .popover. */
+dialog.popover.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+dialog.popover.confirm::backdrop {
+  background: #00000080;
+}
+
+@media (min-width: 768px) {
+  dialog.popover.confirm {
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    width: min(420px, calc(100vw - 32px));
+    padding: 24px;
+  }
+}
+
+.confirm-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.confirm-body {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.confirm-body em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.confirm-error {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-danger-text);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.confirm-button {
+  flex: 1;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.confirm-button:hover:not(:disabled) {
+  background-color: var(--color-surface-hover);
+}
+
+.confirm-button--primary {
+  border-color: transparent;
+  background-color: var(--color-solid);
+  color: var(--color-on-solid);
+}
+
+.confirm-button--primary:hover:not(:disabled) {
+  background-color: var(--color-solid-hover);
+}
+
+.confirm-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
