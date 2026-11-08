@@ -11,6 +11,7 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 		<section class="lists" aria-label="My lists">
 			<div class="cards">
 				<ListCard kind="to_watch" name="To watch" />
+				<ListCard kind="watching" name="Watching" />
 				<ListCard kind="favorites" name="Favorites" />
 				<ListCard kind="watched" name="Watched" />
 			</div>
@@ -46,10 +47,10 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 		white-space: nowrap;
 	}
 
-	/* Três cards lado a lado ocupando toda a largura. */
+	/* Quatro cards lado a lado ocupando toda a largura. */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 16px;
 		width: 100%;
 	}

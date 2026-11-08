@@ -8,6 +8,7 @@ import ListCard from '../../components/lists/ListCard.astro';
 		<h1 class="sr-only">My lists</h1>
 		<div class="cards">
 			<ListCard kind="to_watch" name="To watch" />
+			<ListCard kind="watching" name="Watching" />
 			<ListCard kind="favorites" name="Favorites" />
 			<ListCard kind="watched" name="Watched" />
 		</div>
@@ -39,15 +40,15 @@ import ListCard from '../../components/lists/ListCard.astro';
 		white-space: nowrap;
 	}
 
-	/* Grade pronta para mais listas: 3 colunas, 2 no tablet e 1 no mobile. */
+	/* Grade pronta para mais listas: 4 colunas, 2 no tablet e 1 no mobile. */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 16px;
 		width: 100%;
 	}
 
-	@media (max-width: 1023px) {
+	@media (max-width: 1279px) {
 		.cards {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}

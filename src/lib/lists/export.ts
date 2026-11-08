@@ -5,6 +5,7 @@ import { getListItems, getUserStreamings, type SystemKind } from './store';
 
 const LIST_KINDS: { kind: SystemKind; name: string }[] = [
   { kind: 'to_watch', name: 'To watch' },
+  { kind: 'watching', name: 'Watching' },
   { kind: 'watched', name: 'Watched' },
   { kind: 'favorites', name: 'Favorites' },
 ];

@@ -5,9 +5,11 @@ import {
   getTitleStatus,
   markFavorite,
   markWatched,
+  markWatching,
   removeFromFavorites,
   removeFromToWatch,
   removeFromWatched,
+  removeFromWatching,
   type SystemKind,
   type TitleRef,
 } from './store';
@@ -25,6 +27,7 @@ const svg = (body: string) =>
 const ICONS = {
   trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />'),
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5" />'),
+  play: svg('<path d="M8 5.5v13l10.5-6.5z" />'),
   heart: svg('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z" />'),
   heartBroken: svg('<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z" /><path d="M12 7.4l-2 3.6 3 2-1.5 3.5" />'),
 } as const;
@@ -33,6 +36,8 @@ type Action = (ref: TitleRef, status: Set<SystemKind>) => Promise<void>;
 
 const ACTIONS: Record<string, { label: string; icon: string; run: Action }> = {
   'remove-to-watch': { icon: ICONS.trash, label: 'Remove from to watch', run: (ref) => removeFromToWatch(ref) },
+  'mark-watching': { icon: ICONS.play, label: 'Mark as watching', run: (ref) => markWatching(ref) },
+  'remove-watching': { icon: ICONS.trash, label: 'Remove from watching', run: (ref) => removeFromWatching(ref) },
   'mark-watched': { icon: ICONS.check, label: 'Mark as watched', run: (ref) => markWatched(ref) },
   'mark-favorite': { icon: ICONS.heart, label: 'Mark as favorite', run: (ref, status) => markFavorite(ref, status) },
   'remove-watched': { icon: ICONS.trash, label: 'Remove from watched', run: (ref) => removeFromWatched(ref) },
@@ -40,10 +45,16 @@ const ACTIONS: Record<string, { label: string; icon: string; run: Action }> = {
 };
 
 // Opções mudam conforme o estado atual do título.
-const menuFor = (status: Set<SystemKind>): string[] => {
+// "Watching" é um toggle manual só para filmes; o status das séries virá do progresso dos episódios.
+const menuFor = (status: Set<SystemKind>, mediaType: TitleRef['mediaType']): string[] => {
   const keys: string[] = [];
   if (status.has('to_watch')) {
-    keys.push('remove-to-watch', 'mark-watched', 'mark-favorite');
+    keys.push('remove-to-watch');
+    if (mediaType === 'movie') keys.push('mark-watching');
+    keys.push('mark-watched', 'mark-favorite');
+  }
+  if (status.has('watching')) {
+    keys.push('remove-watching', 'mark-watched', 'mark-favorite');
   }
   if (status.has('watched')) {
     keys.push('remove-watched');
@@ -83,7 +94,7 @@ export const initAddStatus = async (root: HTMLElement) => {
     }
 
     itemsBox.replaceChildren(
-      ...menuFor(status).map((key) => {
+      ...menuFor(status, ref.mediaType).map((key) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'menu-item';

@@ -2,7 +2,7 @@
 // As regras entre listas também são validadas no banco pelo trigger `list_items_enforce_rules`.
 import { supabase } from '../supabase.js';
 
-export type SystemKind = 'to_watch' | 'watched' | 'favorites';
+export type SystemKind = 'to_watch' | 'watching' | 'watched' | 'favorites';
 export type MediaType = 'movie' | 'tv';
 
 export interface TitleRef {
@@ -82,7 +82,7 @@ async function deleteItem(kind: SystemKind, ref: TitleRef) {
   if (error) throw error;
 }
 
-// Listas em que o título está (to_watch, watched, favorites).
+// Listas em que o título está (to_watch, watching, watched, favorites).
 // As consultas feitas no mesmo ciclo (ex.: todos os cards de uma página) viram uma só.
 type StatusRequest = {
   ref: Pick<TitleRef, 'tmdbId' | 'mediaType'>;
@@ -151,10 +151,23 @@ export const removeFromToWatch = async (ref: TitleRef) => {
   notifyListsChanged();
 };
 
-// "Mark as watched": troca de "To watch" para "Watched" (delete antes do insert,
-// porque o banco não aceita o mesmo título nas duas listas ao mesmo tempo).
+// "Mark as watching": troca de "To watch" para "Watching" (delete antes do insert,
+// porque o banco não aceita o mesmo título em duas dessas listas ao mesmo tempo).
+export const markWatching = async (ref: TitleRef) => {
+  await deleteItem('to_watch', ref);
+  await insertItem('watching', ref);
+  notifyListsChanged();
+};
+
+export const removeFromWatching = async (ref: TitleRef) => {
+  await deleteItem('watching', ref);
+  notifyListsChanged();
+};
+
+// "Mark as watched": sai de "To watch" ou "Watching" e entra em "Watched".
 export const markWatched = async (ref: TitleRef) => {
   await deleteItem('to_watch', ref);
+  await deleteItem('watching', ref);
   await insertItem('watched', ref);
   notifyListsChanged();
 };
@@ -211,7 +224,7 @@ async function fetchListSummaries(): Promise<ListSummary[]> {
     .neq('kind', 'custom');
   if (error) throw error;
 
-  const order: SystemKind[] = ['to_watch', 'favorites', 'watched'];
+  const order: SystemKind[] = ['to_watch', 'watching', 'favorites', 'watched'];
   const lists = (data ?? []) as { id: string; kind: SystemKind; list_items: { count: number }[] }[];
 
   return Promise.all(
