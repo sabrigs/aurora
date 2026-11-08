@@ -1,4 +1,5 @@
 ---
+import { safeJson } from '../../lib/safe-json';
 import { getTopBrazilProviders } from '../../lib/streaming/availability';
 import { logoUrl } from '../../lib/tmdb/images';
 
@@ -45,7 +46,7 @@ const providersForClient = providers.map((provider) => ({
 	</div>
 </dialog>
 
-<script id="avatar-providers" type="application/json" set:html={JSON.stringify(providersForClient)} />
+<script id="avatar-providers" type="application/json" set:html={safeJson(providersForClient)} />
 
 <style>
 	.avatar {

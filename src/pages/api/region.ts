@@ -16,8 +16,9 @@ export const GET: APIRoute = async ({ url }) => {
   const reverse = new URL('https://nominatim.openstreetmap.org/reverse');
   reverse.searchParams.set('format', 'jsonv2');
   reverse.searchParams.set('zoom', '3');
-  reverse.searchParams.set('lat', String(lat));
-  reverse.searchParams.set('lon', String(lng));
+  // Precisão de ~11 km basta para achar o país: envia menos da localização do usuário ao Nominatim.
+  reverse.searchParams.set('lat', lat.toFixed(1));
+  reverse.searchParams.set('lon', lng.toFixed(1));
 
   try {
     const response = await fetch(reverse, {

@@ -190,7 +190,8 @@ const MAX_TRAILERS = 4;
 
 // Trailers do YouTube (oficiais primeiro). Sem trailer, usa teasers.
 function pickTrailers(videos: NonNullable<RawDetails['videos']>['results']): Trailer[] {
-  const youtube = videos.filter((video) => video.site === 'YouTube');
+  // A chave vai para URLs de embed e imagem: só aceita o formato de id do YouTube.
+  const youtube = videos.filter((video) => video.site === 'YouTube' && /^[\w-]{6,20}$/.test(video.key));
   const trailers = youtube.filter((video) => video.type === 'Trailer');
   const chosen = trailers.length > 0 ? trailers : youtube.filter((video) => video.type === 'Teaser');
   return [...chosen]
