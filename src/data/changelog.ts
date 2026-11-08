@@ -19,6 +19,96 @@ export interface ChangelogVersion {
 
 export const versions: ChangelogVersion[] = [
   {
+    version: 'v3',
+    date: '2026-11-08',
+    model: 'Claude Sonnet 5.5',
+    cost: '~US$ 10',
+    headline: 'Keep up with your shows',
+    intro:
+      'Aurora now tracks TV series episode by episode, with a new Watching list, and installs on your home screen like an app.',
+    sections: [
+      {
+        kind: 'New',
+        items: [
+          {
+            title: 'Watching',
+            text: 'A new list between To watch and Watched, for movies and series you’re in the middle of. Use “Mark as watching” from any Add menu.',
+          },
+          {
+            title: 'Episode tracking',
+            text: 'Series pages have an Episodes section with overall progress, a season accordion and a checkbox per episode. Mark a whole season, or everything up to a given episode, in one tap.',
+          },
+          {
+            title: 'Automatic status',
+            text: 'Series move between To watch, Watching and Watched on their own as you check off episodes.',
+          },
+          {
+            title: 'Progress on cards',
+            text: 'Cards in Watching show how many episodes you’ve seen and which one is next.',
+          },
+          {
+            title: 'Series status and seasons',
+            text: 'Series show an Ongoing, Ended or Canceled tag and their number of seasons, on cards and on the title page.',
+          },
+          {
+            title: 'Install Aurora',
+            text: 'Add Aurora to your home screen and open it like an app. You can sign in with the code from the email too, since the link opens in the browser.',
+          },
+          {
+            title: 'Search anywhere',
+            text: 'Search lives in the navbar on desktop, and in a new tab bar at the bottom on mobile.',
+          },
+          {
+            title: 'Full cast',
+            text: 'Title pages show the first row of the cast, and “Show all” loads the rest.',
+          },
+        ],
+      },
+      {
+        kind: 'Improved',
+        items: [
+          {
+            title: 'Confirmation for series',
+            text: 'Marking a series as watched or favorite asks first and saves every released episode at once. Removing a series with progress asks before clearing it.',
+          },
+          {
+            title: 'Real progress for old Watched series',
+            text: 'Series you had already marked as Watched get their episode progress when you open them.',
+          },
+          {
+            title: 'Cards, refined',
+            text: 'Larger 120×160 posters, a softer blur at the bottom, cleaner info lines without bullets, and a grid that now fits 4 columns.',
+          },
+          {
+            title: 'Add button and menus',
+            text: 'Icons in every option, 48px targets, haptic feedback on success, and a modal bottom sheet on mobile you can drag to close.',
+          },
+          {
+            title: 'Navbar',
+            text: 'A taller navbar, with Home and My lists sitting right against it.',
+          },
+          {
+            title: 'Safer by default',
+            text: 'Sign-in is now required for every request the app makes, with rate limits, stricter security headers and tighter database rules.',
+          },
+        ],
+      },
+      {
+        kind: 'Fixed',
+        items: [
+          {
+            title: 'Loading states',
+            text: 'Skeletons only appear while something is actually loading.',
+          },
+          {
+            title: 'Long titles',
+            text: 'Titles wrap onto a new line instead of being cut off with an ellipsis.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     version: 'v2',
     date: '2026-11-04',
     model: 'Claude Sonnet 5.5',
