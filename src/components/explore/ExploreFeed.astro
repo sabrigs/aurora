@@ -20,9 +20,10 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 	<!-- Modelo de card: clonado pelo script para cada título retornado. -->
 	<template id="card-template">
 		<article class="title-card">
+			<div class="title-card__media" aria-hidden="true"><img class="title-card__backdrop" alt="" decoding="async" /><div class="title-card__blur"><img alt="" decoding="async" /></div></div>
 			<a class="title-card__cover" href="/"></a>
 			<div class="title-card__info">
-				<img class="title-card__poster" alt="" hidden />
+				<img class="title-card__poster" alt="" loading="lazy" decoding="async" hidden />
 				<div class="title-card__text">
 					<span class="title-card__status" hidden></span>
 					<h2 class="title-card__title"></h2>
@@ -38,6 +39,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		import { apiFetch } from '../../lib/api';
 		import { initAddStatus } from '../../lib/lists/add-status';
 		import { posterUrl } from '../../lib/tmdb/images';
+		import { backdropUrl, setCardBackdrop } from '../../lib/tmdb/card-image';
+		import { writeCardSummary } from '../../lib/tmdb/card-cache';
 		import { setCardMeta, setCardStatus } from '../../lib/tmdb/format';
 		import { setSearchOpen, setSearchQuery } from '../../lib/ui/search';
 		import { filtersEqual, FILTERS_EVENT, getFilters, setFilters } from '../../lib/ui/explore-filters';
@@ -57,6 +60,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			genre?: string | null;
 			status?: string;
 			seasons?: number;
+			year?: number | null;
+			lastSeasonYear?: number | null;
 		};
 
 		const STATE_KEY = 'aurora:explore';
@@ -125,11 +130,22 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			cover.href = `/title/${item.mediaType}/${item.id}`;
 			cover.setAttribute('aria-label', item.title);
 
-			// Fundo: backdrop do título; sem backdrop, usa o pôster.
-			const backdrop = item.backdropPath ? `https://image.tmdb.org/t/p/w780${item.backdropPath}` : posterUrl(item.posterPath, 'w500');
-			if (backdrop) {
-				node.style.backgroundImage = `url("${backdrop}")`;
-			}
+			// Fundo: backdrop do título (fixo, sempre o mesmo arquivo); sem backdrop, usa o pôster.
+			// Os primeiros cards carregam já; os demais, quando chegam perto da tela.
+			const eager = grid.querySelectorAll('.title-card').length < 6;
+			setCardBackdrop(node, backdropUrl(item.backdropPath, item.posterPath), eager);
+
+			// Guarda os dados do card: a tela de listas usa o mesmo cache e pinta na hora.
+			writeCardSummary(item.mediaType, item.id, {
+				backdropPath: item.backdropPath,
+				voteAverage: item.voteAverage,
+				runtime: item.runtime ?? null,
+				genre: item.genre ?? null,
+				status: item.status ?? '',
+				seasons: item.seasons ?? 0,
+				year: item.year ?? null,
+				lastSeasonYear: item.lastSeasonYear ?? null,
+			});
 
 			const poster = node.querySelector<HTMLImageElement>('.title-card__poster')!;
 			const posterSrc = posterUrl(item.posterPath, 'w185');

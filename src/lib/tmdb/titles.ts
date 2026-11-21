@@ -188,6 +188,10 @@ export interface TitleDetails extends TitleSummary {
   seasons: number;
   releaseDate: string | null;
   brazilReleaseDate: string | null;
+  // Ano de lançamento (filme: estreia; série: primeira temporada) e, só para séries, o ano em que a
+  // última temporada estreou. Nulos quando a TMDB não informa.
+  year: number | null;
+  lastSeasonYear: number | null;
 }
 
 interface RawDetails extends RawTitle {
@@ -203,11 +207,23 @@ interface RawDetails extends RawTitle {
   created_by?: { id: number; name: string }[];
   status?: string;
   number_of_seasons?: number;
-  seasons?: { season_number: number; episode_count: number }[];
+  seasons?: { season_number: number; episode_count: number; air_date?: string | null }[];
   release_date?: string;
   first_air_date?: string;
   release_dates?: { results: { iso_3166_1: string; release_dates: { type: number; release_date: string }[] }[] };
   videos?: { results: { key: string; name: string; site: string; type: string; official: boolean }[] };
+}
+
+const yearOf = (date: string | null | undefined): number | null => {
+  const year = Number(date?.slice(0, 4));
+  return Number.isInteger(year) && year > 1800 ? year : null;
+};
+
+// Ano em que a última temporada regular (com episódios) estreou.
+function lastSeasonYearOf(seasons: RawDetails['seasons']): number | null {
+  const regular = (seasons ?? []).filter((season) => season.season_number >= 1 && season.episode_count > 0);
+  const last = regular.sort((a, b) => b.season_number - a.season_number)[0];
+  return yearOf(last?.air_date);
 }
 
 // Primeira estreia em cinemas (tipos 2 e 3) no Brasil, se a TMDB tiver.
@@ -260,6 +276,8 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
       : (raw.number_of_seasons ?? 0),
     releaseDate: raw.release_date || raw.first_air_date || null,
     brazilReleaseDate: brazilTheatricalDate(raw.release_dates?.results ?? []),
+    year: yearOf(raw.release_date || raw.first_air_date),
+    lastSeasonYear: mediaType === 'tv' ? lastSeasonYearOf(raw.seasons) : null,
     trailers: pickTrailers(raw.videos?.results ?? []),
     director:
       mediaType === 'movie'
@@ -287,6 +305,8 @@ export interface RelatedTitle extends TitleSummary {
   // Situação da série na TMDB (ex.: "Ended"); vazia para filmes ou quando os detalhes falham.
   status: string;
   seasons: number;
+  year: number | null;
+  lastSeasonYear: number | null;
 }
 
 interface RawCredit extends RawTitle {
@@ -321,9 +341,9 @@ export async function getSameDirectorTitles(
       const summary = toSummary(credit, mediaType);
       try {
         const details = await getTitleDetails(mediaType, credit.id);
-        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons };
+        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
       } catch {
-        return { ...summary, runtime: null, genre: null, status: '', seasons: 0 };
+        return { ...summary, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
       }
     }),
   );

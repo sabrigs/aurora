@@ -1,4 +1,4 @@
-// Texto da linha de informações dos cards: Movie, 2h 15min, Action, ★ 7.5.
+// Texto da linha de informações dos cards: Movie, 2024, 2h 15min, Action, ★ 7.5.
 export const formatRuntime = (minutes: number | null | undefined) => {
   if (!minutes) return null;
   return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}min` : `${minutes}min`;
@@ -11,11 +11,24 @@ type CardInfo = {
   voteAverage?: number | null;
   // Temporadas de uma série (entram na linha de informações; ignoradas em filmes).
   seasons?: number | null;
+  // Ano de lançamento; em séries, `lastSeasonYear` é o ano da última temporada.
+  year?: number | null;
+  lastSeasonYear?: number | null;
+};
+
+// Filme: "2024". Série: "2020 - 2024" (ano da primeira e da última temporada) ou só "2020" se forem o mesmo.
+export const formatYears = (info: Pick<CardInfo, 'mediaType' | 'year' | 'lastSeasonYear'>): string | null => {
+  if (!info.year) return null;
+  if (info.mediaType === 'tv' && info.lastSeasonYear && info.lastSeasonYear > info.year) {
+    return `${info.year} - ${info.lastSeasonYear}`;
+  }
+  return String(info.year);
 };
 
 export const cardMetaParts = (info: CardInfo): string[] =>
   [
     info.mediaType === 'movie' ? 'Movie' : 'Series',
+    formatYears(info),
     info.mediaType === 'tv' && info.seasons ? `${info.seasons} ${info.seasons === 1 ? 'season' : 'seasons'}` : null,
     formatRuntime(info.runtime),
     info.genre,

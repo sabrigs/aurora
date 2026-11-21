@@ -5,6 +5,7 @@ import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
 import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
 import { cardMetaParts, seriesStatusTag } from '../../../lib/tmdb/format';
+import { backdropUrl } from '../../../lib/tmdb/card-image';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
 import type { MediaType } from '../../../lib/tmdb/client';
@@ -187,10 +188,16 @@ const poster = posterUrl(details.posterPath, 'w342');
 					<h2 id="related">{relatedHeading}</h2>
 					<div class="related">
 						{related.map((item) => (
-							<article class="title-card" style={item.backdropPath || item.posterPath ? `background-image: url("${item.backdropPath ? `https://image.tmdb.org/t/p/w780${item.backdropPath}` : posterUrl(item.posterPath, 'w500')}");` : undefined}>
+							<article class="title-card is-loaded">
+								{backdropUrl(item.backdropPath, item.posterPath) && (
+									<div class="title-card__media" aria-hidden="true">
+										<img class="title-card__backdrop" src={backdropUrl(item.backdropPath, item.posterPath)!} alt="" loading="lazy" decoding="async" />
+										<div class="title-card__blur"><img src={backdropUrl(item.backdropPath, item.posterPath)!} alt="" loading="lazy" decoding="async" /></div>
+									</div>
+								)}
 								<a class="title-card__cover" href={`/title/${item.mediaType}/${item.id}`} aria-label={item.title}></a>
 								<div class="title-card__info">
-									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" />}
+									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" loading="lazy" decoding="async" />}
 									<div class="title-card__text">
 										{seriesStatusTag(item.mediaType, item.status) && (
 											<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>

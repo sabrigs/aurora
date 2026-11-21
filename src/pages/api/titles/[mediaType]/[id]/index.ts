@@ -29,6 +29,8 @@ export const GET: APIRoute = async ({ request, params }) => {
         genre: details.genres[0] ?? null,
         status: details.status,
         seasons: details.seasons,
+        year: details.year,
+        lastSeasonYear: details.lastSeasonYear,
       }),
       {
         headers: {

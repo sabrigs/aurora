@@ -59,9 +59,10 @@ const name = LIST_NAMES[kind];
 		<!-- Mesmo card da página Explore, sem o botão de adicionar (o título já está na lista). -->
 		<template id="card-template">
 			<article class="title-card" role="listitem">
+				<div class="title-card__media" aria-hidden="true"><img class="title-card__backdrop" alt="" decoding="async" /><div class="title-card__blur"><img alt="" decoding="async" /></div></div>
 				<a class="title-card__cover" href="/"></a>
 				<div class="title-card__info">
-					<img class="title-card__poster" alt="" hidden />
+					<img class="title-card__poster" alt="" loading="lazy" decoding="async" hidden />
 					<div class="title-card__text">
 						<span class="title-card__status" hidden></span>
 						<h2 class="title-card__title"></h2>
@@ -80,6 +81,8 @@ const name = LIST_NAMES[kind];
 		import { fetchAiredEpisodes } from '../../lib/lists/series-flows';
 		import { getListItems, getUserStreamings, type ListItem, type StreamingRow, type SystemKind } from '../../lib/lists/store';
 		import { posterUrl } from '../../lib/tmdb/images';
+		import { backdropUrl, setCardBackdrop } from '../../lib/tmdb/card-image';
+		import { readCardSummary, writeCardSummary, type CardSummary } from '../../lib/tmdb/card-cache';
 		import { seriesStatusTag, setCardMeta, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
@@ -161,15 +164,23 @@ const name = LIST_NAMES[kind];
 		const cardTemplate = document.getElementById('card-template') as HTMLTemplateElement;
 
 		// Backdrop e nota de cada título, buscados uma vez e reaproveitados.
-		const summaries = new Map<string, Promise<{ backdropPath: string | null; voteAverage: number; runtime: number | null; genre: string | null; status: string; seasons: number } | null>>();
+		// Usa o cache local (localStorage) antes de ir à API: o card já nasce completo, sem trocar de imagem.
+		const summaries = new Map<string, Promise<CardSummary | null>>();
 		const loadSummary = (item: ListItem) => {
 			const key = `${item.mediaType}:${item.tmdbId}`;
 			if (!summaries.has(key)) {
+				const cached = readCardSummary(item.mediaType, item.tmdbId);
 				summaries.set(
 					key,
-					apiFetch(`/api/titles/${item.mediaType}/${item.tmdbId}`)
-						.then((response) => (response.ok ? response.json() : null))
-						.catch(() => null),
+					cached
+						? Promise.resolve(cached)
+						: apiFetch(`/api/titles/${item.mediaType}/${item.tmdbId}`)
+								.then((response) => (response.ok ? (response.json() as Promise<CardSummary>) : null))
+								.then((summary) => {
+									if (summary) writeCardSummary(item.mediaType, item.tmdbId, summary);
+									return summary;
+								})
+								.catch(() => null),
 				);
 			}
 			return summaries.get(key)!;
@@ -186,7 +197,7 @@ const name = LIST_NAMES[kind];
 			return `${count} of ${total} watched • ${upNext}`;
 		};
 
-		const renderCard = (item: ListItem) => {
+		const renderCard = (item: ListItem, index: number) => {
 			const node = cardTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
 			const cover = node.querySelector<HTMLAnchorElement>('.title-card__cover')!;
 			cover.href = `/title/${item.mediaType}/${item.tmdbId}`;
@@ -203,10 +214,6 @@ const name = LIST_NAMES[kind];
 			const meta = node.querySelector<HTMLElement>('.title-card__meta')!;
 			setCardMeta(meta, { mediaType: item.mediaType });
 
-			// Enquanto o backdrop não chega, usa o pôster como fundo.
-			const poster = posterUrl(item.posterPath, 'w500');
-			if (poster) node.style.backgroundImage = `url("${poster}")`;
-
 			if (kind === 'watching' && item.mediaType === 'tv') {
 				const progress = node.querySelector<HTMLElement>('.title-card__progress')!;
 				seriesProgress(item)
@@ -218,11 +225,12 @@ const name = LIST_NAMES[kind];
 					.catch((error) => console.error(error));
 			}
 
+			// O fundo só entra quando o backdrop é conhecido (sem trocar de pôster para backdrop no meio).
+			// Os primeiros cards carregam já; os demais, quando chegam perto da tela.
+			const eager = index < 6;
 			void loadSummary(item).then((summary) => {
+				setCardBackdrop(node, backdropUrl(summary?.backdropPath ?? null, item.posterPath), eager);
 				if (!summary) return;
-				if (summary.backdropPath) {
-					node.style.backgroundImage = `url("https://image.tmdb.org/t/p/w780${summary.backdropPath}")`;
-				}
 				setCardMeta(meta, { mediaType: item.mediaType, ...summary });
 				setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, summary.status);
 			});
@@ -233,7 +241,7 @@ const name = LIST_NAMES[kind];
 		const renderGrid = async () => {
 			saveScreenState(STATE_KEY, state);
 			const visible = await applyFilters();
-			grid.replaceChildren(...visible.map(renderCard));
+			grid.replaceChildren(...visible.map((item, index) => renderCard(item, index)));
 
 			emptyList.hidden = items.length > 0;
 			emptyFilter.hidden = items.length === 0 || visible.length > 0;

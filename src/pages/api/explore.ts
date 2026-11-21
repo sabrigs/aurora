@@ -3,10 +3,10 @@ import { requireUser } from '../../lib/auth/require-user';
 import { getOnTheater, getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
 import { getTitleStreamingProviders } from '../../lib/streaming/availability';
 
-const json = (body: unknown, status = 200) =>
+const json = (body: unknown, status = 200, cacheControl = 'no-store') =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+    headers: { 'content-type': 'application/json', 'cache-control': cacheControl },
   });
 
 // Feed do Explore (trending) e busca, paginados para o scroll infinito.
@@ -75,14 +75,15 @@ export const GET: APIRoute = async ({ request, url }) => {
 
       try {
         const details = await getTitleDetails(item.mediaType, item.id);
-        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons };
+        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
       } catch {
-        return { ...item, runtime: null, genre: null, status: '', seasons: 0 };
+        return { ...item, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
       }
     }),
   );
 
   const items = enriched.filter((item) => item !== null);
 
-  return json({ ...result, items });
+  // Catálogo muda devagar: o navegador reaproveita a resposta por 5 minutos (evita refazer tudo ao atualizar a página).
+  return json({ ...result, items }, 200, 'private, max-age=300');
 };
