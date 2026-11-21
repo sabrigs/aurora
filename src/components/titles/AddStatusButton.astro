@@ -35,8 +35,12 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
 </div>
 
 <style>
+  /* Reserva a altura do botão (48px) desde o início: enquanto o estado da lista carrega, Add e badge
+     ficam escondidos, e sem isso o título e as informações ao lado pulariam quando o botão aparecesse. */
   .add-status {
     display: inline-flex;
+    align-items: center;
+    min-height: 48px;
   }
 
   .add-button,
