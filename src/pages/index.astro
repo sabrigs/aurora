@@ -23,10 +23,14 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 
 	<script>
 		import { initListCards } from '../lib/lists/cards';
+		import { enableDragScroll } from '../lib/ui/drag-scroll';
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
 		document.addEventListener('astro:page-load', () => {
 			if (document.querySelector('.home .list-card')) initListCards();
+			// No mobile as listas viram um carrossel: com o mouse dá para arrastar.
+			const carousel = document.querySelector<HTMLElement>('.home .cards');
+			if (carousel) enableDragScroll(carousel);
 		});
 	</script>
 </AppLayout>
@@ -84,6 +88,17 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 
 		.cards::-webkit-scrollbar {
 			display: none;
+		}
+
+		/* Arrastar com o mouse (ver lib/ui/drag-scroll.ts). Durante o arraste o snap sai de cena. */
+		.cards {
+			cursor: grab;
+		}
+
+		.cards.is-dragging {
+			cursor: grabbing;
+			scroll-snap-type: none;
+			user-select: none;
 		}
 
 		.cards > :global(.list-card) {
