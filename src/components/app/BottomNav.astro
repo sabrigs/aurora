@@ -8,7 +8,7 @@ const tr = serverT(Astro.locals);
 
 
 <nav class="bottom-nav" aria-label={tr('nav.main')} hidden>
-	<a href="/" data-nav="/">
+	<a href="/" data-nav="/" data-astro-prefetch="load">
 		<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
 			<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round" />
 		</svg>
@@ -21,7 +21,7 @@ const tr = serverT(Astro.locals);
 		</svg>
 		<span>{tr('nav.search')}</span>
 	</button>
-	<a href="/lists" data-nav="/lists">
+	<a href="/lists" data-nav="/lists" data-astro-prefetch="load">
 		<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
 			<rect x="3" y="7" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.8" fill="none" />
 			<path d="M9 3l3 4 3-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" />
