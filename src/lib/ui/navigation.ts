@@ -33,10 +33,24 @@ export function loadScreenState<T>(key: string): T | null {
   }
 }
 
-// Botão "Back" de um título: volta no histórico quando há uma página anterior nesta aba.
+// Há uma tela anterior do próprio app? `history.length` não serve: conta também páginas de fora e entradas
+// à frente, e o "voltar" sairia do app. O roteador numera as entradas (state.index; 0 = a primeira do app nesta aba)
+// e, quando a tela foi aberta por navegação completa, o referrer do mesmo site mostra de onde ela veio.
+export function hasInAppHistory(): boolean {
+  const index = history.state?.index;
+  if (typeof index === 'number' && index > 0) return true;
+  try {
+    return document.referrer !== '' && new URL(document.referrer).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+// Botão "Back": volta no histórico (o mesmo destino do voltar do navegador) quando há uma tela anterior do app;
+// senão segue o href do link, que é a tela "mãe".
 export function bindBackLink(link: HTMLAnchorElement) {
   link.addEventListener('click', (event) => {
-    if (history.length > 1) {
+    if (hasInAppHistory()) {
       event.preventDefault();
       history.back();
     }

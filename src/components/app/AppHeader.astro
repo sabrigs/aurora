@@ -108,7 +108,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	});
 
 	// Botão de voltar: aparece em toda tela interna (fora da Home e de My lists). Volta no histórico
-	// quando há uma página anterior; se a tela foi aberta direto, vai para a tela "mãe".
+	// quando há uma tela anterior do app (igual ao voltar do navegador); se foi aberta direto, vai para a tela "mãe".
 	const backLink = document.querySelector<HTMLAnchorElement>('.header-back')!;
 	const updateBack = () => {
 		const path = window.location.pathname.replace(/\/$/, '') || '/';
@@ -117,17 +117,13 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	};
 	updateBack();
 	document.addEventListener('astro:page-load', updateBack);
-	backLink.addEventListener('click', (event) => {
-		if (history.length > 1) {
-			event.preventDefault();
-			history.back();
-		}
-	});
+	bindBackLink(backLink);
 
 	// Busca da navbar: campo na própria navbar (desktop) ou barra sob ela, aberta pela tab Search (mobile).
 	// Na Home, avisa o Explore a cada digitação; nas outras telas, Enter leva à Home com a busca feita.
 	import { announceSearch, clearSearch, setSearchOpen, setSearchQuery, syncSearchMode } from '../../lib/ui/search';
 	import { ensureRegion } from '../../lib/region/locate';
+	import { bindBackLink } from '../../lib/ui/navigation';
 
 	const searchForm = document.querySelector<HTMLFormElement>('[data-header-search]')!;
 	const searchInput = document.getElementById('header-search-input') as HTMLInputElement;

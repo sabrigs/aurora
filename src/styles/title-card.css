@@ -4,6 +4,9 @@
 	height: 420px;
 	border-radius: 16px;
 	overflow: hidden;
+	/* Alguns navegadores (Safari, Firefox) não recortam nos cantos arredondados quando há filhos com blur,
+	   máscara ou backdrop-filter: o clip-path garante o recorte. */
+	clip-path: inset(0 round 16px);
 	background-color: var(--color-surface-raised);
 }
 
