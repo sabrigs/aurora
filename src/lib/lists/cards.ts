@@ -39,26 +39,22 @@ const redirectIfNeeded = async () => {
   return true;
 };
 
-// Preenche um card: contador e prévia em leque (centro = mais recente).
+// Preenche um card: contador e miniatura 2x2 (o mais recente fica no topo à esquerda).
 const renderCard = (summary: ListSummary) => {
   const card = document.querySelector<HTMLElement>(`[data-list-kind="${summary.kind}"]`);
   if (!card) return;
 
   card.querySelector<HTMLElement>('[data-count]')!.textContent = String(summary.count);
 
-  const slots = card.querySelectorAll<HTMLElement>('[data-poster]');
-  // Ordem visual: esquerda, centro (mais recente), direita.
-  const order = [1, 0, 2];
-  order.forEach((slotIndex, position) => {
-    const slot = slots[slotIndex];
-    const item = summary.recent[position];
-    const poster = posterUrl(item?.posterPath ?? null);
+  card.querySelectorAll<HTMLElement>('[data-poster]').forEach((slot, index) => {
+    const poster = posterUrl(summary.recent[index]?.posterPath ?? null, 'w185');
 
     slot.classList.remove('poster--loading');
     if (poster) {
+      slot.classList.remove('poster--silhouette');
       slot.style.backgroundImage = `url("${poster}")`;
-      slot.style.backgroundSize = 'cover';
     } else {
+      slot.style.backgroundImage = '';
       slot.classList.add('poster--silhouette');
     }
   });

@@ -8,7 +8,6 @@
 	background-color: var(--color-surface-raised);
 	background-size: cover;
 	background-position: center;
-	border: 2px solid #2B2B2B;
 }
 
 .title-card::after {

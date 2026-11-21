@@ -1,6 +1,7 @@
 ---
-// Card de lista da Home: título, contador no canto superior direito e
-// prévia em leque com os 3 últimos títulos. A Home preenche os dados no cliente.
+// Card de lista (Home e My lists): miniatura quadrada com os 4 últimos títulos adicionados,
+// e à direita o nome da lista com a quantidade de itens (como as playlists do Spotify).
+// Lista vazia: os 4 espaços ficam como silhueta. Os dados são preenchidos no cliente.
 interface Props {
   kind: 'to_watch' | 'watching' | 'watched' | 'favorites';
   name: string;
@@ -10,27 +11,26 @@ const { kind, name } = Astro.props;
 ---
 
 <a class="list-card" href={`/lists/${kind}`} data-list-kind={kind}>
-  <div class="list-card__header">
+  <div class="thumb" aria-hidden="true">
+    <span class="poster poster--loading" data-poster></span>
+    <span class="poster poster--loading" data-poster></span>
+    <span class="poster poster--loading" data-poster></span>
+    <span class="poster poster--loading" data-poster></span>
+  </div>
+  <div class="info">
     <h2>{name}</h2>
     <span class="count" data-count aria-label="Titles in list">0</span>
-  </div>
-  <div class="fan" aria-hidden="true">
-    <span class="poster poster--loading" data-poster></span>
-    <span class="poster poster--loading" data-poster></span>
-    <span class="poster poster--loading" data-poster></span>
   </div>
 </a>
 
 <style>
   .list-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    height: 340px;
-    padding: 20px 20px 0;
     box-sizing: border-box;
-    border: 2px solid #2b2b2b;
-    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px;
+    border-radius: 12px;
     background-color: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
@@ -41,61 +41,44 @@ const { kind, name } = Astro.props;
     background-color: var(--color-surface-raised);
   }
 
-  .list-card__header {
+  /* Quadrado 2x2 com os pôsteres, do mais recente (topo à esquerda) ao mais antigo. */
+  .thumb {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 2px;
+    flex: 0 0 auto;
+    width: 140px;
+    height: 140px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .poster {
+    background-color: var(--color-surface-raised);
+    background-size: cover;
+    background-position: center;
+  }
+
+  .info {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
   }
 
   h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
+    overflow-wrap: anywhere;
   }
 
   .count {
-    font-size: 1.125rem;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
     color: var(--color-text-muted);
-  }
-
-  /* Leque de pôsteres ancorado na borda inferior do card, cortado por ela. */
-  .fan {
-    position: relative;
-    flex: 1;
-  }
-
-  .poster {
-    position: absolute;
-    bottom: -22px;
-    left: 50%;
-    width: var(--poster-w, 130px);
-    aspect-ratio: 2 / 3;
-    margin-left: calc(var(--poster-w, 130px) / -2);
-    border-radius: 4px 4px 0 0;
-    background-color: var(--color-surface-raised);
-    background-size: cover;
-    background-position: center;
-    box-shadow: 0 8px 24px #00000066;
-    transform-origin: 50% 100%;
-  }
-
-  .poster:nth-child(1) {
-    transform: translateX(calc(var(--fan-offset, 90px) * -1)) rotate(-10deg);
-    z-index: 1;
-  }
-
-  /* Centro maior e mais alto que os das laterais. */
-  .poster:nth-child(2) {
-    width: var(--poster-center-w, 160px);
-    margin-left: calc(var(--poster-center-w, 160px) / -2);
-    transform: translateY(-16px);
-    z-index: 3;
-  }
-
-  .poster:nth-child(3) {
-    transform: translateX(var(--fan-offset, 90px)) rotate(10deg);
-    z-index: 2;
   }
 
   /* Skeleton enquanto a lista carrega; vira o pôster, ou a silhueta se a lista estiver vazia. */
