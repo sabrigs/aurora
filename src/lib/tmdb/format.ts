@@ -35,7 +35,8 @@ export const cardMetaRows = (info: CardInfo): string[][] =>
       info.mediaType === 'movie' ? 'Movie' : 'Series',
       formatYears(info),
       info.mediaType === 'tv' && info.seasons ? `${info.seasons} ${info.seasons === 1 ? 'season' : 'seasons'}` : null,
-      formatRuntime(info.runtime),
+      // Duração só para filmes: em séries o que importa são as temporadas.
+      info.mediaType === 'movie' ? formatRuntime(info.runtime) : null,
     ],
     [info.genre, info.voteAverage && info.voteAverage > 0 ? `★ ${info.voteAverage.toFixed(1)}` : null],
   ]
