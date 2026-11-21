@@ -9,9 +9,11 @@ export interface CardSummary {
   seasons: number;
   year: number | null;
   lastSeasonYear: number | null;
+  // Streamings do título no Brasil (até 4).
+  providers: { name: string; logoPath: string | null }[];
 }
 
-const PREFIX = 'aurora:card:';
+const PREFIX = 'aurora:card:v2:';
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 const keyFor = (mediaType: string, id: number) => `${PREFIX}${mediaType}:${id}`;

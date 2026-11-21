@@ -1,3 +1,5 @@
+import { logoUrl } from './images';
+
 // Texto da linha de informações dos cards: Movie, 2024, 2h 15min, Action, ★ 7.5.
 export const formatRuntime = (minutes: number | null | undefined) => {
   if (!minutes) return null;
@@ -73,4 +75,40 @@ export const setCardStatus = (element: HTMLElement, mediaType: 'movie' | 'tv', s
   element.hidden = !tag;
   element.className = tag ? `title-card__status title-card__status--${tag.tone}` : 'title-card__status';
   element.textContent = tag?.label ?? '';
+};
+
+export interface CardProviderLogo {
+  name: string;
+  logoPath: string | null;
+}
+
+// No máximo 3 logos; se houver mais streamings, entra um círculo com "+" no lugar do resto.
+export const MAX_PROVIDER_LOGOS = 3;
+
+// Preenche a fileira de logos de streaming do card (.title-card__providers); sem streamings, fica escondida.
+export const setCardProviders = (element: HTMLElement, providers: CardProviderLogo[] | null | undefined) => {
+  const list = providers ?? [];
+  element.hidden = list.length === 0;
+  element.replaceChildren(
+    ...list.slice(0, MAX_PROVIDER_LOGOS).map((provider) => {
+      const logo = document.createElement('img');
+      logo.className = 'title-card__provider';
+      logo.alt = provider.name;
+      logo.title = provider.name;
+      logo.loading = 'lazy';
+      logo.decoding = 'async';
+      const src = logoUrl(provider.logoPath);
+      if (src) logo.src = src;
+      return logo;
+    }),
+    ...(list.length > MAX_PROVIDER_LOGOS
+      ? [
+          Object.assign(document.createElement('span'), {
+            className: 'title-card__provider title-card__provider--more',
+            textContent: '+',
+            ariaLabel: 'More streamings',
+          }),
+        ]
+      : []),
+  );
 };

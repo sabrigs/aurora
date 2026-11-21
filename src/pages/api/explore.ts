@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { requireUser } from '../../lib/auth/require-user';
 import { getOnTheater, getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
-import { getTitleStreamingProviders } from '../../lib/streaming/availability';
+import { getCardProviders, getTitleStreamingProviders } from '../../lib/streaming/availability';
 
 const json = (body: unknown, status = 200, cacheControl = 'no-store') =>
   new Response(JSON.stringify(body), {
@@ -73,11 +73,13 @@ export const GET: APIRoute = async ({ request, url }) => {
         if (!available.some((provider) => providerBrands.has(provider.name))) return null;
       }
 
+      const providers = await getCardProviders(item.mediaType, item.id);
+
       try {
         const details = await getTitleDetails(item.mediaType, item.id);
-        return { ...item, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
+        return { ...item, providers, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
       } catch {
-        return { ...item, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
+        return { ...item, providers, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
       }
     }),
   );

@@ -1,4 +1,5 @@
 // Consultas de filmes e séries usadas pelas telas (Explore, detalhes, backdrop).
+import { getCardProviders, type CardProvider } from '../streaming/availability';
 import { tmdbFetch, type MediaType } from './client';
 
 export interface TitleSummary {
@@ -307,6 +308,8 @@ export interface RelatedTitle extends TitleSummary {
   seasons: number;
   year: number | null;
   lastSeasonYear: number | null;
+  // Streamings do título no Brasil (até 4), para os logos do card.
+  providers: CardProvider[];
 }
 
 interface RawCredit extends RawTitle {
@@ -339,11 +342,12 @@ export async function getSameDirectorTitles(
   return Promise.all(
     top.map(async (credit) => {
       const summary = toSummary(credit, mediaType);
+      const providers = await getCardProviders(mediaType, credit.id);
       try {
         const details = await getTitleDetails(mediaType, credit.id);
-        return { ...summary, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
+        return { ...summary, providers, runtime: details.runtime, genre: details.genres[0] ?? null, status: details.status, seasons: details.seasons, year: details.year, lastSeasonYear: details.lastSeasonYear };
       } catch {
-        return { ...summary, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
+        return { ...summary, providers, runtime: null, genre: null, status: '', seasons: 0, year: null, lastSeasonYear: null };
       }
     }),
   );

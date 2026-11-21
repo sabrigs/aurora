@@ -94,11 +94,11 @@ export const initAddStatus = async (root: HTMLElement) => {
 
   enableLightDismiss(dialog);
 
-  // Largura da pílula aberta (bolinha de 40px + nome + margens), para a largura poder animar.
+  // Largura da pílula aberta (padding 8 + bolinha de 32px + nome com seu espaçamento + padding 8), para a largura poder animar.
   const measureBadge = () => {
     if (badge.hidden) return;
     const label = badgeLabel.scrollWidth;
-    if (label > 0) badge.style.setProperty('--expanded-width', `${40 + 8 + label}px`);
+    if (label > 0) badge.style.setProperty('--expanded-width', `${8 + 32 + label + 8}px`);
   };
   void document.fonts?.ready.then(measureBadge);
 

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { requireUser } from '../../../../../lib/auth/require-user';
 import { getTitleDetails } from '../../../../../lib/tmdb/titles';
+import { getCardProviders } from '../../../../../lib/streaming/availability';
 import type { MediaType } from '../../../../../lib/tmdb/client';
 
 // Dados resumidos de um título para os cards (backdrop, pôster, nota, duração e gênero). Cacheado pela TMDB client.
@@ -19,7 +20,10 @@ export const GET: APIRoute = async ({ request, params }) => {
   }
 
   try {
-    const details = await getTitleDetails(mediaType as MediaType, id);
+    const [details, providers] = await Promise.all([
+      getTitleDetails(mediaType as MediaType, id),
+      getCardProviders(mediaType as MediaType, id),
+    ]);
     return new Response(
       JSON.stringify({
         backdropPath: details.backdropPath,
@@ -31,6 +35,7 @@ export const GET: APIRoute = async ({ request, params }) => {
         seasons: details.seasons,
         year: details.year,
         lastSeasonYear: details.lastSeasonYear,
+        providers,
       }),
       {
         headers: {

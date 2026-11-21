@@ -67,3 +67,19 @@ export async function getTitleStreamingProviders(
 
   return groupByBrand(brazil.map(toProvider));
 }
+
+// Streamings (marca + logo) em que o título está no Brasil, para os cards. Traz até 4: os 3 primeiros
+// viram logos e o 4º só indica que há mais ("+"). Sem dados ou com erro, devolve lista vazia.
+export interface CardProvider {
+  name: string;
+  logoPath: string | null;
+}
+
+export async function getCardProviders(mediaType: MediaType, id: number): Promise<CardProvider[]> {
+  try {
+    const providers = await getTitleStreamingProviders(mediaType, id);
+    return providers.slice(0, 4).map(({ name, logoPath }) => ({ name, logoPath }));
+  } catch {
+    return [];
+  }
+}

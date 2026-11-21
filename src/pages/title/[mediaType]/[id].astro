@@ -4,7 +4,7 @@ import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
 import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
 import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
-import { cardMetaParts, seriesStatusTag } from '../../../lib/tmdb/format';
+import { cardMetaParts, MAX_PROVIDER_LOGOS, seriesStatusTag } from '../../../lib/tmdb/format';
 import { backdropUrl } from '../../../lib/tmdb/card-image';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
@@ -204,6 +204,14 @@ const poster = posterUrl(details.posterPath, 'w342');
 										)}
 										<h3 class="title-card__title">{item.title}</h3>
 										<p class="title-card__meta">{cardMetaParts(item).map((part) => <span>{part}</span>)}</p>
+										{item.providers.length > 0 && (
+											<div class="title-card__providers">
+												{item.providers.slice(0, MAX_PROVIDER_LOGOS).map((provider) => (
+													<img class="title-card__provider" src={logoUrl(provider.logoPath) ?? ''} alt={provider.name} title={provider.name} loading="lazy" decoding="async" />
+												))}
+												{item.providers.length > MAX_PROVIDER_LOGOS && <span class="title-card__provider title-card__provider--more" aria-label="More streamings">+</span>}
+											</div>
+										)}
 									</div>
 								</div>
 								<AddStatusButton tmdbId={item.id} mediaType={item.mediaType} title={item.title} posterPath={item.posterPath} />

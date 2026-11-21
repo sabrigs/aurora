@@ -28,6 +28,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 					<span class="title-card__status" hidden></span>
 					<h2 class="title-card__title"></h2>
 					<p class="title-card__meta"></p>
+					<div class="title-card__providers" hidden></div>
 				</div>
 			</div>
 			<AddStatusButton tmdbId={0} mediaType="movie" title="" posterPath={null} />
@@ -41,7 +42,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		import { posterUrl } from '../../lib/tmdb/images';
 		import { backdropUrl, setCardBackdrop } from '../../lib/tmdb/card-image';
 		import { writeCardSummary } from '../../lib/tmdb/card-cache';
-		import { setCardMeta, setCardStatus } from '../../lib/tmdb/format';
+		import { setCardMeta, setCardProviders, setCardStatus } from '../../lib/tmdb/format';
 		import { setSearchOpen, setSearchQuery } from '../../lib/ui/search';
 		import { filtersEqual, FILTERS_EVENT, getFilters, setFilters } from '../../lib/ui/explore-filters';
 		import type { ExploreFilters } from '../../lib/ui/explore-filters';
@@ -62,6 +63,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			seasons?: number;
 			year?: number | null;
 			lastSeasonYear?: number | null;
+			providers?: { name: string; logoPath: string | null }[];
 		};
 
 		const STATE_KEY = 'aurora:explore';
@@ -145,6 +147,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 				seasons: item.seasons ?? 0,
 				year: item.year ?? null,
 				lastSeasonYear: item.lastSeasonYear ?? null,
+				providers: item.providers ?? [],
 			});
 
 			const poster = node.querySelector<HTMLImageElement>('.title-card__poster')!;
@@ -157,6 +160,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			node.querySelector<HTMLElement>('.title-card__title')!.textContent = item.title;
 			setCardMeta(node.querySelector<HTMLElement>('.title-card__meta')!, item);
 			setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, item.status);
+			setCardProviders(node.querySelector<HTMLElement>('.title-card__providers')!, item.providers);
 
 			const root = node.querySelector<HTMLElement>('[data-add-status]')!;
 			root.dataset.tmdbId = String(item.id);

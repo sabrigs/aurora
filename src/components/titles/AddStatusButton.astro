@@ -70,39 +70,40 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     animation: badge-in 260ms ease-out;
   }
 
-  /* Nos cards, a bolinha vira uma pílula com o nome da lista:
-     expande (e mostra o nome com fade) com o mouse sobre a bolinha ou logo depois de adicionar,
-     e volta a ser só a bolinha quando o mouse sai. */
+  /* Nos cards: a bolinha (32px) fica dentro de um círculo escuro translúcido de 48px, igual ao Add.
+     Com o mouse sobre ela (ou logo depois de adicionar), vira uma pílula com o nome da lista; o nome
+     entra e sai com fade e a largura anima. Sem o mouse, volta a ser só a bolinha. */
   :global(.title-card) .status-badge {
-    --check: 48px;
-    --pad: 0px;
     box-sizing: border-box;
     justify-content: flex-start;
     width: 48px;
-    padding: var(--pad);
+    height: 48px;
+    padding: 8px;
     overflow: hidden;
     border-radius: 999px;
-    background-color: transparent;
+    /* Mesmo fundo do botão Add. */
+    background-color: #00000055;
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     transition:
       width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      padding 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
       background-color 220ms ease;
   }
 
   :global(.title-card) .status-badge__check {
-    width: var(--check);
-    height: var(--check);
-    transition:
-      width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      height 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    width: 32px;
+    height: 32px;
+  }
+
+  :global(.title-card) .status-badge__check svg {
+    width: 20px;
+    height: 20px;
   }
 
   :global(.title-card) .status-badge__label {
     display: block;
-    padding-inline: 10px 16px;
-    font-size: 1.0625rem;
+    padding-inline: 8px 8px;
+    font-size: 1rem;
     line-height: 1;
     white-space: nowrap;
     opacity: 0;
@@ -112,10 +113,8 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   :global(.title-card) .status-badge:hover,
   :global(.title-card) .status-badge:focus-visible,
   :global(.title-card) .status-badge.is-open {
-    --check: 40px;
-    --pad: 4px;
     width: var(--expanded-width, auto);
-    background-color: #00000066;
+    background-color: #00000077;
   }
 
   :global(.title-card) .status-badge:hover .status-badge__label,
@@ -128,7 +127,6 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
 
   @media (prefers-reduced-motion: reduce) {
     :global(.title-card) .status-badge,
-    :global(.title-card) .status-badge__check,
     :global(.title-card) .status-badge__label {
       transition-duration: 1ms;
     }

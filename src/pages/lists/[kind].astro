@@ -68,6 +68,7 @@ const name = LIST_NAMES[kind];
 						<h2 class="title-card__title"></h2>
 						<p class="title-card__meta"></p>
 						<p class="title-card__progress" hidden></p>
+						<div class="title-card__providers" hidden></div>
 					</div>
 				</div>
 			</article>
@@ -83,7 +84,7 @@ const name = LIST_NAMES[kind];
 		import { posterUrl } from '../../lib/tmdb/images';
 		import { backdropUrl, setCardBackdrop } from '../../lib/tmdb/card-image';
 		import { readCardSummary, writeCardSummary, type CardSummary } from '../../lib/tmdb/card-cache';
-		import { seriesStatusTag, setCardMeta, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
+		import { seriesStatusTag, setCardMeta, setCardProviders, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
 		import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
@@ -233,6 +234,7 @@ const name = LIST_NAMES[kind];
 				if (!summary) return;
 				setCardMeta(meta, { mediaType: item.mediaType, ...summary });
 				setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, summary.status);
+				setCardProviders(node.querySelector<HTMLElement>('.title-card__providers')!, summary.providers);
 			});
 
 			return node;
