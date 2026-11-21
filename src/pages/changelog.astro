@@ -1,9 +1,23 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import { versions } from '../data/changelog';
+import { changelogPt } from '../data/changelog.pt';
 import { localeOf, serverT, toLang } from '../lib/i18n';
 
 const tr = serverT(Astro.locals);
+const lang = toLang(Astro.locals.lang);
+
+// Em português usa a tradução (mesma ordem de seções e itens); sem tradução para a versão, fica o inglês.
+const releases = versions.map((release) => {
+	const pt = lang === 'pt-BR' ? changelogPt[release.version] : undefined;
+	if (!pt) return release;
+	return {
+		...release,
+		headline: pt.headline,
+		intro: pt.intro,
+		sections: release.sections.map((section, index) => ({ ...section, items: pt.sections[index]?.items ?? section.items })),
+	};
+});
 ---
 
 <AppLayout fullWidth>
@@ -13,7 +27,7 @@ const tr = serverT(Astro.locals);
 			<p>{tr('changelog.subtitle')}</p>
 		</header>
 
-		{versions.map((release) => (
+		{releases.map((release) => (
 			<section class="release" aria-labelledby={`release-${release.version}`}>
 				<div class="meta">
 					<h2 id={`release-${release.version}`}>{release.version}</h2>
@@ -24,7 +38,7 @@ const tr = serverT(Astro.locals);
 							year: 'numeric',
 						})}
 					</time>
-					<span class="cost" title="Approximate Claude API cost to vibe code this version">{release.cost} · {release.model}</span>
+					<span class="cost" title={tr('changelog.costTitle')}>{release.cost} · {release.model}</span>
 				</div>
 				<div class="body">
 					<h3>{release.headline}</h3>
@@ -32,7 +46,7 @@ const tr = serverT(Astro.locals);
 
 					{release.sections.map((section) => (
 						<div class="group">
-							<h4 data-kind={section.kind}>{section.kind}</h4>
+							<h4 data-kind={section.kind}>{tr(`changelog.kind.${section.kind}`)}</h4>
 							<ul>
 								{section.items.map((item) => (
 									<li>

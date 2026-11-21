@@ -178,6 +178,10 @@ const en: Record<string, string> = {
   // Changelog
   'changelog.title': 'Changelog',
   'changelog.subtitle': 'New features, improvements and fixes in Aurora.',
+  'changelog.costTitle': 'Approximate Claude API cost to vibe code this version',
+  'changelog.kind.New': 'New',
+  'changelog.kind.Improved': 'Improved',
+  'changelog.kind.Fixed': 'Fixed',
 };
 
 const ptBR: Record<string, string> = {
@@ -346,6 +350,10 @@ const ptBR: Record<string, string> = {
 
   'changelog.title': 'Novidades',
   'changelog.subtitle': 'Novos recursos, melhorias e correções do Aurora.',
+  'changelog.costTitle': 'Custo aproximado da API do Claude para construir esta versão',
+  'changelog.kind.New': 'Novo',
+  'changelog.kind.Improved': 'Melhorado',
+  'changelog.kind.Fixed': 'Corrigido',
 };
 
 export const messages: Record<'en' | 'pt-BR', Record<string, string>> = { en, 'pt-BR': ptBR };
