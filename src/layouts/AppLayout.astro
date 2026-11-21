@@ -13,9 +13,11 @@ interface Props {
 	requireAuth?: boolean;
 	// Conteúdo colado na navbar, sem o espaço de 24px entre os dois.
 	flushTop?: boolean;
+	// Navbar sem fundo enquanto a tela está no topo (o conteúdo, como um backdrop, sobe até a borda).
+	clearHeader?: boolean;
 }
 
-const { fullWidth = false, requireAuth = false, flushTop = false } = Astro.props;
+const { fullWidth = false, requireAuth = false, flushTop = false, clearHeader = false } = Astro.props;
 
 // Dados para a proteção inline (roda no <head>, antes da primeira pintura).
 const gate = {
@@ -33,7 +35,7 @@ const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
 const showBottomNav = pathname === '/' || pathname === '/lists';
 ---
 
-<Layout>
+<Layout clearHeader={clearHeader}>
 	<Fragment slot="head">
 		<script is:inline define:vars={{ gate }}>
 			// Evita ver a tela protegida por um instante antes de pular para o login (ou o onboarding).

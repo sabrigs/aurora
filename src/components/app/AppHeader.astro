@@ -60,6 +60,15 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	markCurrentPage();
 	document.addEventListener('astro:page-load', markCurrentPage);
 
+	// Navbar sem fundo só no topo: passando de 40px de rolagem, o fundo volta (para o conteúdo não
+	// ficar por baixo dos botões sem contraste).
+	const updateHeaderSolid = () => {
+		document.documentElement.toggleAttribute('data-header-solid', window.scrollY > 40);
+	};
+	window.addEventListener('scroll', updateHeaderSolid, { passive: true });
+	document.addEventListener('astro:page-load', updateHeaderSolid);
+	updateHeaderSolid();
+
 	// Botão de voltar: aparece em toda tela interna (fora da Home e de My lists). Volta no histórico
 	// quando há uma página anterior; se a tela foi aberta direto, vai para a tela "mãe".
 	const backLink = document.querySelector<HTMLAnchorElement>('.header-back')!;
@@ -130,6 +139,12 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		/* 16px em cima e embaixo: os itens de 48px ocupam a altura toda (80px). */
 		padding: 16px;
 		background-color: var(--color-bg);
+		transition: background-color 200ms ease;
+	}
+
+	/* Telas com clearHeader (ex.: título): sem fundo no topo; com a rolagem, o fundo volta. */
+	:global(html[data-header-clear]:not([data-header-solid])) .app-header {
+		background-color: transparent;
 	}
 
 	/* Botão de voltar: círculo discreto só com o ícone, no canto esquerdo. */

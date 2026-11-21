@@ -73,9 +73,14 @@ const backdrop = details.backdropPath ? `https://image.tmdb.org/t/p/w1280${detai
 const poster = posterUrl(details.posterPath, 'w342');
 ---
 
-<AppLayout fullWidth>
+<AppLayout fullWidth clearHeader>
 	<article class="title">
-		<div class="hero" style={backdrop ? `--backdrop: url("${backdrop}");` : undefined}>
+		<div class="hero-wrap" style={backdrop ? `--backdrop: url("${backdrop}");` : undefined}>
+		{backdrop && (
+			<div class="hero-ambient" aria-hidden="true"><span></span></div>
+		)}
+		<div class="hero">
+			<div class="hero-bg" aria-hidden="true"></div>
 			<div class="hero-inner">
 				{poster && <img class="hero-poster" src={poster} alt="" />}
 				<div class="hero-text">
@@ -87,6 +92,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 					<AddStatusButton tmdbId={details.id} mediaType={details.mediaType} title={details.title} posterPath={details.posterPath} />
 				</div>
 			</div>
+		</div>
 		</div>
 
 		<div class="content">
@@ -320,34 +326,75 @@ const poster = posterUrl(details.posterPath, 'w342');
 </script>
 
 <style>
-	/* Backdrop de borda a borda, logo abaixo da navbar fixa. */
+	/* O backdrop vai de borda a borda e sobe até o topo da tela, por trás da navbar (sem fundo no topo). */
 	.title {
+		position: relative;
+		isolation: isolate;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
 	}
 
+	.hero-wrap {
+		position: relative;
+		/* Sobe por cima do espaço da navbar e do respiro de 24px do conteúdo. */
+		margin: calc(-1 * (var(--header-height) + 24px)) -16px 0;
+	}
+
 	.hero {
 		position: relative;
-		overflow: hidden;
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		height: clamp(300px, 45vw, 550px);
-		margin: -24px -16px 0;
+		/* A mesma altura de antes, mais a da navbar que agora fica sobre o backdrop. */
+		height: calc(clamp(300px, 45vw, 550px) + var(--header-height));
 		padding: 16px;
+	}
+
+	/* Backdrop + escurecimentos. A máscara dissolve a borda de baixo, deixando aparecer o efeito ambiente. */
+	.hero-bg {
+		position: absolute;
+		inset: 0;
 		background-color: var(--color-surface);
 		background-image: var(--backdrop, none);
 		background-size: cover;
 		background-position: center;
+		-webkit-mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+		mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
 	}
 
-	.hero::after {
+	/* Topo escuro para os botões da navbar e base escura para o texto (título, informações). */
+	.hero-bg::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(180deg, #00000066 0%, #00000000 30%, #000000cc 100%);
+		background: linear-gradient(180deg, #00000099 0%, #00000000 26%, #00000000 42%, #000000b3 100%);
+	}
+
+	/* Efeito ambiente (como no YouTube): o backdrop espelhado, muito borrado e translúcido, que continua
+	   as cores da imagem para baixo e se dissolve até o fundo da página. Fica atrás de todo o conteúdo. */
+	.hero-ambient {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: calc(100% - 160px);
+		height: 560px;
+		z-index: -1;
+		overflow: hidden;
 		pointer-events: none;
+		-webkit-mask-image: linear-gradient(180deg, #000 0%, #000 30%, transparent 100%);
+		mask-image: linear-gradient(180deg, #000 0%, #000 30%, transparent 100%);
+	}
+
+	.hero-ambient span {
+		position: absolute;
+		inset: -60px;
+		background-image: var(--backdrop, none);
+		background-size: cover;
+		background-position: center bottom;
+		transform: scaleY(-1);
+		filter: blur(56px) saturate(1.3);
+		opacity: 0.45;
 	}
 
 	/* Pôster + texto alinhados à coluna de conteúdo (800px). */

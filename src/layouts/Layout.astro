@@ -2,10 +2,16 @@
 import { ClientRouter } from 'astro:transitions';
 import { themeCss } from '../styles/tokens';
 
+interface Props {
+    // A navbar fica sem fundo no topo da tela (ex.: página do título, com o backdrop até o topo).
+    clearHeader?: boolean;
+}
+
+const { clearHeader = false } = Astro.props;
 const tokensStyle = `<style>${themeCss()}</style>`;
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-header-clear={clearHeader ? '' : undefined}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
