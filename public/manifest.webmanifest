@@ -7,8 +7,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#111113",
-  "theme_color": "#111113",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "launch_handler": { "client_mode": "navigate-existing" },
   "handle_links": "preferred",
   "icons": [

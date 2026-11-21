@@ -1,27 +1,16 @@
 import {
-  green,
   greenDark,
-  grass,
   grassDark,
-  teal,
   tealDark,
-  jade,
   jadeDark,
-  mint,
   mintDark,
-  red,
   redDark,
-  blue,
   blueDark,
-  amber,
   amberDark,
 } from '@radix-ui/colors';
 import { primitiveTokens } from './primitives';
-import type { Theme } from './primitives';
 
-export type { Theme };
-
-// Tokens semânticos da Aurora. Neutros e destaque (gray, indigo, white) apontam para os
+// Tokens semânticos da Aurora (só dark). Neutros e destaque (gray, indigo, white) apontam para os
 // primitivos de primitives.ts via var(); as demais escalas vêm direto do Radix Colors.
 // Os passos seguem as regras de acessibilidade do Radix:
 //   1–2  fundos · 3–5 superfícies e estados · 6–8 bordas e foco
@@ -31,26 +20,23 @@ export type Palette = Record<string, string>;
 
 // Escalas de cor de destaque selecionáveis (estados positivos, ex.: "assistido").
 export const successPalettes = {
-  green: { dark: greenDark, light: green },
-  grass: { dark: grassDark, light: grass },
-  teal: { dark: tealDark, light: teal },
-  jade: { dark: jadeDark, light: jade },
-  mint: { dark: mintDark, light: mint },
+  green: greenDark,
+  grass: grassDark,
+  teal: tealDark,
+  jade: jadeDark,
+  mint: mintDark,
 } as const;
 
 export type SuccessPaletteName = keyof typeof successPalettes;
 
 // Escalas auxiliares (não selecionáveis no catálogo por enquanto).
-const danger = { dark: redDark, light: red };
-const info = { dark: blueDark, light: blue };
-const warning = { dark: amberDark, light: amber };
+const danger = redDark;
+const info = blueDark;
+const warning = amberDark;
 
 // Tokens de destaque de estado positivo, derivados de uma escala à escolha.
-export const successTokens = (
-  theme: Theme,
-  success: SuccessPaletteName,
-): Record<string, string> => {
-  const s: Palette = successPalettes[success][theme];
+export const successTokens = (success: SuccessPaletteName): Record<string, string> => {
+  const s: Palette = successPalettes[success];
 
   return {
     '--color-success-bg': s[`${success}3`] ?? '',
@@ -64,13 +50,10 @@ export const successTokens = (
 const gray = (step: number) => `var(--gray-${step})`;
 const indigo = (step: number) => `var(--indigo-${step})`;
 
-export const semanticTokens = (
-  theme: Theme,
-  success: SuccessPaletteName,
-): Record<string, string> => {
-  const d: Palette = danger[theme];
-  const i: Palette = info[theme];
-  const w: Palette = warning[theme];
+export const semanticTokens = (success: SuccessPaletteName): Record<string, string> => {
+  const d: Palette = danger;
+  const i: Palette = info;
+  const w: Palette = warning;
 
   return {
     // Superfícies
@@ -92,7 +75,7 @@ export const semanticTokens = (
     '--color-on-solid': 'var(--white)',
 
     // Destaque (estados positivos, ex.: badge "adicionado" / "assistido")
-    ...successTokens(theme, success),
+    ...successTokens(success),
 
     // Seleção (checkboxes marcados)
     '--color-selected': indigo(9),
@@ -121,16 +104,11 @@ const fontTokens = {
   '--font-sans': "'Inter', system-ui, -apple-system, sans-serif",
 };
 
-// CSS completo dos tokens: dark por padrão, light via [data-theme="light"].
+// CSS completo dos tokens (a plataforma é só dark).
 export const themeCss = (success: SuccessPaletteName = 'green') =>
-  [
-    toCss(':root', {
-      ...fontTokens,
-      ...primitiveTokens('dark'),
-      ...semanticTokens('dark', success),
-    }),
-    toCss(':root[data-theme="light"]', {
-      ...primitiveTokens('light'),
-      ...semanticTokens('light', success),
-    }),
-  ].join('\n\n');
+  toCss(':root', {
+    'color-scheme': 'dark',
+    ...fontTokens,
+    ...primitiveTokens,
+    ...semanticTokens(success),
+  });

@@ -13,11 +13,11 @@ import type { SuccessPaletteName } from '../../styles/tokens';
 
 // Página interna: não linkada no site e marcada como noindex.
 const successNames = Object.keys(successPalettes) as SuccessPaletteName[];
-const tokens = semanticTokens('dark', 'green');
+const tokens = semanticTokens('green');
 const tokenNames = Object.keys(tokens);
 
 // Tokens de destaque de cada escala, para trocar ao vivo no catálogo.
-const palettes = Object.fromEntries(successNames.map((name) => [name, successTokens('dark', name)]));
+const palettes = Object.fromEntries(successNames.map((name) => [name, successTokens(name)]));
 ---
 
 <Layout>
