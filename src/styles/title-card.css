@@ -257,9 +257,10 @@
 	white-space: nowrap;
 }
 
-/* O "Add" dos cards só aparece com o mouse sobre o card (ou com o foco nele). Sem mouse (toque), fica sempre visível.
+/* O "Add" dos cards só aparece com o mouse sobre o card (ou com o foco nele), no desktop.
+   No celular (tela estreita ou sem mouse) fica sempre visível.
    O badge de quem já está nas listas não some: é sempre visível. */
-@media (hover: hover) {
+@media (hover: hover) and (min-width: 768px) {
 	.title-card .add-status .add-button {
 		opacity: 0;
 		pointer-events: none;

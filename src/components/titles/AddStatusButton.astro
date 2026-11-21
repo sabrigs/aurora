@@ -98,65 +98,68 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     animation: badge-in 260ms ease-out;
   }
 
-  /* Nos cards: a bolinha (32px) fica dentro de um círculo escuro translúcido de 48px, igual ao Add.
-     Com o mouse sobre ela (ou logo depois de adicionar), vira uma pílula com o nome da lista; o nome
-     entra e sai com fade e a largura anima. Sem o mouse, volta a ser só a bolinha. */
-  :global(.title-card) .status-badge {
-    box-sizing: border-box;
-    justify-content: flex-start;
-    width: 48px;
-    height: 48px;
-    padding: 8px;
-    overflow: hidden;
-    border-radius: 999px;
-    /* Mesmo fundo do botão Add. */
-    background-color: #00000055;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    transition:
-      width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      background-color 220ms ease;
-  }
+  /* Só no desktop (largura de 768px ou mais, com mouse): no celular o badge é só a bolinha verde com o check. */
+  @media (hover: hover) and (min-width: 768px) {
+    /* Nos cards: a bolinha (32px) fica dentro de um círculo escuro translúcido de 48px, igual ao Add.
+       Com o mouse sobre ela (ou logo depois de adicionar), vira uma pílula com o nome da lista; o nome
+       entra e sai com fade e a largura anima. Sem o mouse, volta a ser só a bolinha. */
+    :global(.title-card) .status-badge {
+      box-sizing: border-box;
+      justify-content: flex-start;
+      width: 48px;
+      height: 48px;
+      padding: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      /* Mesmo fundo do botão Add. */
+      background-color: #00000055;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      transition:
+        width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 220ms ease;
+    }
 
-  :global(.title-card) .status-badge__check {
-    width: 32px;
-    height: 32px;
-  }
+    :global(.title-card) .status-badge__check {
+      width: 32px;
+      height: 32px;
+    }
 
-  :global(.title-card) .status-badge__check svg {
-    width: 20px;
-    height: 20px;
-  }
+    :global(.title-card) .status-badge__check svg {
+      width: 20px;
+      height: 20px;
+    }
 
-  :global(.title-card) .status-badge__label {
-    display: block;
-    padding-inline: 8px 8px;
-    font-size: 1rem;
-    line-height: 1;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 160ms ease;
-  }
-
-  :global(.title-card) .status-badge:hover,
-  :global(.title-card) .status-badge:focus-visible,
-  :global(.title-card) .status-badge.is-open {
-    width: var(--expanded-width, auto);
-    background-color: #00000077;
-  }
-
-  :global(.title-card) .status-badge:hover .status-badge__label,
-  :global(.title-card) .status-badge:focus-visible .status-badge__label,
-  :global(.title-card) .status-badge.is-open .status-badge__label {
-    opacity: 1;
-    /* O nome entra um instante depois de a pílula começar a abrir. */
-    transition-delay: 90ms;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(.title-card) .status-badge,
     :global(.title-card) .status-badge__label {
-      transition-duration: 1ms;
+      display: block;
+      padding-inline: 8px 8px;
+      font-size: 1rem;
+      line-height: 1;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+
+    :global(.title-card) .status-badge:hover,
+    :global(.title-card) .status-badge:focus-visible,
+    :global(.title-card) .status-badge.is-open {
+      width: var(--expanded-width, auto);
+      background-color: #00000077;
+    }
+
+    :global(.title-card) .status-badge:hover .status-badge__label,
+    :global(.title-card) .status-badge:focus-visible .status-badge__label,
+    :global(.title-card) .status-badge.is-open .status-badge__label {
+      opacity: 1;
+      /* O nome entra um instante depois de a pílula começar a abrir. */
+      transition-delay: 90ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      :global(.title-card) .status-badge,
+      :global(.title-card) .status-badge__label {
+        transition-duration: 1ms;
+      }
     }
   }
 
