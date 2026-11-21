@@ -65,6 +65,14 @@ const menuFor = (status: Set<SystemKind>, mediaType: TitleRef['mediaType']): str
   return keys;
 };
 
+// Lista que aparece no badge: a de status (To watch, Watching, Watched). Favoritos nunca entra.
+const statusLabel = (status: Set<SystemKind>): string | null => {
+  if (status.has('watching')) return 'Watching';
+  if (status.has('watched')) return 'Watched';
+  if (status.has('to_watch')) return 'To watch';
+  return null;
+};
+
 const refFrom = (root: HTMLElement): TitleRef => ({
   tmdbId: Number(root.dataset.tmdbId),
   mediaType: root.dataset.mediaType as TitleRef['mediaType'],
@@ -75,6 +83,7 @@ const refFrom = (root: HTMLElement): TitleRef => ({
 export const initAddStatus = async (root: HTMLElement) => {
   const addButton = root.querySelector<HTMLButtonElement>('[data-add]')!;
   const badge = root.querySelector<HTMLButtonElement>('[data-badge]')!;
+  const badgeLabel = root.querySelector<HTMLElement>('[data-badge-label]')!;
   const dialog = root.querySelector<HTMLDialogElement>('[data-menu]')!;
   const itemsBox = root.querySelector<HTMLElement>('[data-menu-items]')!;
   const ref = refFrom(root);
@@ -85,14 +94,43 @@ export const initAddStatus = async (root: HTMLElement) => {
 
   enableLightDismiss(dialog);
 
+  // Largura da pílula aberta (bolinha de 40px + nome + margens), para a largura poder animar.
+  const measureBadge = () => {
+    if (badge.hidden) return;
+    const label = badgeLabel.scrollWidth;
+    if (label > 0) badge.style.setProperty('--expanded-width', `${40 + 8 + label}px`);
+  };
+  void document.fonts?.ready.then(measureBadge);
+
+  // Logo depois de adicionar, a pílula fica aberta com o nome da lista (mesmo sem mouse em cima).
+  let closeTimer: number | undefined;
+  const openBriefly = () => {
+    window.clearTimeout(closeTimer);
+    badge.classList.add('is-open');
+    closeTimer = window.setTimeout(() => badge.classList.remove('is-open'), 2200);
+  };
+  badge.addEventListener('pointerleave', () => {
+    window.clearTimeout(closeTimer);
+    badge.classList.remove('is-open');
+  });
+
   const render = (status: Set<SystemKind>, justAdded = false) => {
     const added = status.size > 0;
     addButton.hidden = added;
     badge.hidden = !added;
+
+    const label = statusLabel(status);
+    if (label) {
+      badgeLabel.textContent = label;
+      badge.setAttribute('aria-label', `${ref.title} is in ${label}. Open options`);
+      measureBadge();
+    }
+
     if (added && justAdded) {
       badge.classList.remove('is-entering');
       void badge.offsetWidth;
       badge.classList.add('is-entering');
+      openBriefly();
     }
 
     itemsBox.replaceChildren(

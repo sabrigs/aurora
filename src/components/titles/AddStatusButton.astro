@@ -24,7 +24,10 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     <span>Add</span>
   </button>
   <button type="button" class="status-badge" data-badge hidden aria-haspopup="dialog" aria-label={`${title} is in your lists. Open options`}>
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+    <span class="status-badge__check">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+    </span>
+    <span class="status-badge__label" data-badge-label aria-hidden="true"></span>
   </button>
   <dialog class="popover" data-menu aria-label={`Options for ${title}`}>
     <div class="menu" data-menu-items></div>
@@ -37,48 +40,98 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   }
 
   .add-button,
+  /* Badge: bolinha verde com o check. */
   .status-badge {
-    height: 48px;
-    border-radius: 999px;
-    font-size: 0.9375rem;
-    cursor: pointer;
-  }
-
-  .add-button {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 79px;
     padding: 0;
-    line-height: 1;
     border: 0;
-    /* Translúcido: funciona sobre backdrops e sobre o fundo da página. */
-    background-color: #00000055;
+    background: none;
     color: #fff;
-    font-size: 1.0625rem;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
   }
 
-  .add-button:hover {
-    background-color: #00000077;
-  }
-
-  .status-badge {
+  .status-badge__check {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
     width: 48px;
-    padding: 0;
-    border: 0;
-    /* Radix grass */
-    background-color: #3e9b4f;
-    color: #fff;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-added);
+  }
+
+  /* O nome da lista só existe nos cards (ver abaixo). */
+  .status-badge__label {
+    display: none;
   }
 
   .status-badge.is-entering {
     animation: badge-in 260ms ease-out;
+  }
+
+  /* Nos cards, a bolinha vira uma pílula com o nome da lista:
+     expande (e mostra o nome com fade) com o mouse sobre a bolinha ou logo depois de adicionar,
+     e volta a ser só a bolinha quando o mouse sai. */
+  :global(.title-card) .status-badge {
+    --check: 48px;
+    --pad: 0px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    width: 48px;
+    padding: var(--pad);
+    overflow: hidden;
+    border-radius: 999px;
+    background-color: transparent;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition:
+      width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      padding 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 220ms ease;
+  }
+
+  :global(.title-card) .status-badge__check {
+    width: var(--check);
+    height: var(--check);
+    transition:
+      width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      height 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  :global(.title-card) .status-badge__label {
+    display: block;
+    padding-inline: 10px 16px;
+    font-size: 1.0625rem;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  :global(.title-card) .status-badge:hover,
+  :global(.title-card) .status-badge:focus-visible,
+  :global(.title-card) .status-badge.is-open {
+    --check: 40px;
+    --pad: 4px;
+    width: var(--expanded-width, auto);
+    background-color: #00000066;
+  }
+
+  :global(.title-card) .status-badge:hover .status-badge__label,
+  :global(.title-card) .status-badge:focus-visible .status-badge__label,
+  :global(.title-card) .status-badge.is-open .status-badge__label {
+    opacity: 1;
+    /* O nome entra um instante depois de a pílula começar a abrir. */
+    transition-delay: 90ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.title-card) .status-badge,
+    :global(.title-card) .status-badge__check,
+    :global(.title-card) .status-badge__label {
+      transition-duration: 1ms;
+    }
   }
 
   .add-button:disabled,

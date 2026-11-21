@@ -77,6 +77,9 @@ export const semanticTokens = (success: SuccessPaletteName): Record<string, stri
     // Destaque (estados positivos, ex.: badge "adicionado" / "assistido")
     ...successTokens(success),
 
+    // Título já adicionado às listas (bolinha com o check nos cards)
+    '--color-added': '#346d3f',
+
     // Seleção (checkboxes marcados)
     '--color-selected': indigo(9),
 
