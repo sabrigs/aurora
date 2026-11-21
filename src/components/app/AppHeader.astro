@@ -1,5 +1,5 @@
 ---
-// Navbar: filtro + busca centralizados; no desktop, "Home" (listas + Explore), "My lists" e o avatar à direita.
+// Navbar: botão de voltar à esquerda (nas telas internas), filtro + busca centralizados; no desktop, "Home" (listas + Explore), "My lists" e o avatar à direita.
 // No mobile, a navegação vai para a toolbar inferior (BottomNav) e o avatar fica no header.
 import AvatarMenu from './AvatarMenu.astro';
 import SearchFilters from './SearchFilters.astro';
@@ -12,6 +12,11 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 ---
 
 <header class="app-header">
+	<a class="header-back" href="/" aria-label="Back" hidden>
+		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<path d="M15 18l-6-6 6-6" />
+		</svg>
+	</a>
 	<div class="header-tools">
 		<SearchFilters />
 		<form class="header-search" role="search" data-header-search>
@@ -54,6 +59,23 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 
 	markCurrentPage();
 	document.addEventListener('astro:page-load', markCurrentPage);
+
+	// Botão de voltar: aparece em toda tela interna (fora da Home e de My lists). Volta no histórico
+	// quando há uma página anterior; se a tela foi aberta direto, vai para a tela "mãe".
+	const backLink = document.querySelector<HTMLAnchorElement>('.header-back')!;
+	const updateBack = () => {
+		const path = window.location.pathname.replace(/\/$/, '') || '/';
+		backLink.hidden = path === '/' || path === '/lists';
+		backLink.href = path.startsWith('/lists/') ? '/lists' : '/';
+	};
+	updateBack();
+	document.addEventListener('astro:page-load', updateBack);
+	backLink.addEventListener('click', (event) => {
+		if (history.length > 1) {
+			event.preventDefault();
+			history.back();
+		}
+	});
 
 	// Busca da navbar: campo na própria navbar (desktop) ou barra sob ela, aberta pela tab Search (mobile).
 	// Na Home, avisa o Explore a cada digitação; nas outras telas, Enter leva à Home com a busca feita.
@@ -108,6 +130,28 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		/* 16px em cima e embaixo: os itens de 48px ocupam a altura toda (80px). */
 		padding: 16px;
 		background-color: var(--color-bg);
+	}
+
+	/* Botão de voltar: círculo só com o ícone, no canto esquerdo (o mesmo do onboarding). */
+	.header-back {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 48px;
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		background-color: var(--color-solid);
+		color: var(--color-on-solid);
+		box-shadow: 0 2px 5px 0 #0000001f;
+	}
+
+	.header-back:hover {
+		background-color: var(--color-solid-hover);
+	}
+
+	.header-back[hidden] {
+		display: none;
 	}
 
 	/* Filtro + busca, centralizados na navbar independente do menu à direita. */

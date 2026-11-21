@@ -76,15 +76,6 @@ const poster = posterUrl(details.posterPath, 'w342');
 <AppLayout fullWidth>
 	<article class="title">
 		<div class="hero" style={backdrop ? `--backdrop: url("${backdrop}");` : undefined}>
-			<div class="hero-bar">
-				<a class="back" href="/" data-back>
-					<span class="back-icon" aria-hidden="true">
-						<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
-					</span>
-					<span class="back-label">Back</span>
-				</a>
-			</div>
-
 			<div class="hero-inner">
 				{poster && <img class="hero-poster" src={poster} alt="" />}
 				<div class="hero-text">
@@ -232,7 +223,6 @@ const poster = posterUrl(details.posterPath, 'w342');
 </AppLayout>
 
 <script>
-	import { bindBackLink } from '../../../lib/ui/navigation';
 	import { apiFetch } from '../../../lib/api';
 	import { posterUrl } from '../../../lib/tmdb/images';
 
@@ -299,11 +289,8 @@ const poster = posterUrl(details.posterPath, 'w342');
 		});
 	};
 
-	// A navegação troca a página sem recarregar o script: liga o botão e o rótulo a cada visita.
+	// A navegação troca a página sem recarregar o script: liga o rótulo a cada visita.
 	document.addEventListener('astro:page-load', () => {
-		const back = document.querySelector<HTMLAnchorElement>('[data-back]');
-		if (back) bindBackLink(back);
-
 		setupCast();
 
 		// Trailer: abre o vídeo do YouTube num overlay por cima da página.
@@ -363,17 +350,6 @@ const poster = posterUrl(details.posterPath, 'w342');
 		pointer-events: none;
 	}
 
-	.hero-bar {
-		position: absolute;
-		top: 16px;
-		left: 16px;
-		right: 16px;
-		z-index: 1;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
 	/* Pôster + texto alinhados à coluna de conteúdo (800px). */
 	.hero-inner {
 		position: relative;
@@ -401,26 +377,6 @@ const poster = posterUrl(details.posterPath, 'w342');
 		align-items: flex-start;
 		gap: 12px;
 		min-width: 0;
-	}
-
-	.back {
-		display: inline-flex;
-		align-items: center;
-		gap: 12px;
-		color: var(--color-text);
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.back-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 999px;
-		background-color: #ffffff1a;
-		backdrop-filter: blur(8px);
 	}
 
 	/* Situação da série, acima do título: bolinha colorida sobre fundo translúcido (legível em qualquer backdrop). */
