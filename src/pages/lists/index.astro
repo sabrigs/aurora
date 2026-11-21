@@ -5,7 +5,7 @@ import ListCard from '../../components/lists/ListCard.astro';
 
 <AppLayout fullWidth requireAuth flushTop>
 	<section class="all-lists">
-		<h1 class="sr-only">My lists</h1>
+		<h1 class="section-title">My lists</h1>
 		<div class="cards">
 			<ListCard kind="to_watch" name="To watch" />
 			<ListCard kind="watching" name="Watching" />
@@ -27,17 +27,9 @@ import ListCard from '../../components/lists/ListCard.astro';
 	.all-lists {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
-	}
-
-	/* Título só para leitores de tela. */
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0 0 0 0);
-		white-space: nowrap;
+		gap: 16px;
+		/* Mesmo respiro do topo da Home. */
+		padding-top: 16px;
 	}
 
 	/* Grade pronta para mais listas: 4 colunas, 2 no tablet e 1 no mobile. */
