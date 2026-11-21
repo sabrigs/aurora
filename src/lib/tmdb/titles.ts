@@ -56,7 +56,16 @@ const toSummary = (raw: RawTitle, mediaType: MediaType): TitleSummary => ({
 const isoDate = (date: Date) => date.toISOString().slice(0, 10);
 
 // Explore → "Trending": títulos em alta na última semana.
-export async function getTrending(page = 1): Promise<TitlePage> {
+// Com `category`, só filmes ou só séries (a TMDB não traz media_type nesse caso).
+export async function getTrending(page = 1, category?: MediaType): Promise<TitlePage> {
+  if (category) {
+    const data = await tmdbFetch<Paged<RawTitle>>(`/trending/${category}/week`, { page });
+    return {
+      items: data.results.map((item) => toSummary(item, category)),
+      totalPages: Math.min(data.total_pages, MAX_PAGES),
+    };
+  }
+
   const data = await tmdbFetch<Paged<RawTitle & { media_type?: string }>>('/trending/all/week', { page });
   return {
     items: data.results
@@ -105,7 +114,20 @@ export async function isInBrazilTheaters(mediaType: MediaType, id: number): Prom
 }
 
 // Busca por título ou artista. Para artistas, entram os títulos conhecidos deles (known_for).
-export async function searchTitles(query: string, page = 1): Promise<TitlePage> {
+// Com `category`, a busca é só de filmes ou só de séries (sem os títulos conhecidos de artistas).
+export async function searchTitles(query: string, page = 1, category?: MediaType): Promise<TitlePage> {
+  if (category) {
+    const data = await tmdbFetch<Paged<RawTitle>>(`/search/${category}`, {
+      query,
+      page,
+      include_adult: false,
+    });
+    return {
+      items: data.results.map((item) => toSummary(item, category)),
+      totalPages: Math.min(data.total_pages, MAX_PAGES),
+    };
+  }
+
   const data = await tmdbFetch<Paged<RawTitle & RawPerson>>('/search/multi', {
     query,
     page,

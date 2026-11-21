@@ -35,9 +35,12 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 let summaryCache: { value: Promise<ListSummary[]>; expires: number; resolved?: ListSummary[] } | null = null;
 const itemsCache = new Map<SystemKind, { value: Promise<ListItem[]>; expires: number }>();
 
+let listedCache: { value: Promise<Set<string>>; expires: number } | null = null;
+
 const invalidateListCache = () => {
   summaryCache = null;
   itemsCache.clear();
+  listedCache = null;
 };
 
 const notifyListsChanged = () => {
@@ -247,7 +250,7 @@ export const removeFromFavorites = async (ref: TitleRef) => {
   notifyListsChanged();
 };
 
-// Resumo para a Home: contador e últimos 3 títulos adicionados de cada lista de sistema.
+// Resumo para a Home: contador e últimos 4 títulos adicionados de cada lista de sistema.
 export function getListSummaries(): Promise<ListSummary[]> {
   if (summaryCache && summaryCache.expires > Date.now()) {
     return summaryCache.value;
@@ -294,7 +297,7 @@ async function fetchListSummaries(): Promise<ListSummary[]> {
         .select('title, poster_path')
         .eq('list_id', list.id)
         .order('added_at', { ascending: false })
-        .limit(3);
+        .limit(4);
       if (recentError) throw recentError;
 
       return {
@@ -307,6 +310,38 @@ async function fetchListSummaries(): Promise<ListSummary[]> {
       };
     }),
   );
+}
+
+// Títulos que estão em qualquer lista do usuário, como "movie:123" / "tv:456".
+// Usado para esconder da busca o que já foi adicionado.
+export function getListedTitleKeys(): Promise<Set<string>> {
+  if (listedCache && listedCache.expires > Date.now()) return listedCache.value;
+
+  const value = fetchListedTitleKeys();
+  listedCache = { value, expires: Date.now() + CACHE_TTL_MS };
+  value.catch(() => {
+    listedCache = null;
+  });
+  return value;
+}
+
+async function fetchListedTitleKeys(): Promise<Set<string>> {
+  const keys = new Set<string>();
+  // O Supabase devolve no máximo 1000 linhas por consulta: lê em blocos.
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('list_items')
+      .select('tmdb_id, media_type')
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+
+    for (const row of (data ?? []) as { tmdb_id: number; media_type: MediaType }[]) {
+      keys.add(`${row.media_type}:${row.tmdb_id}`);
+    }
+    if ((data ?? []).length < PAGE) break;
+  }
+  return keys;
 }
 
 // Streamings do usuário (tabela user_streamings).

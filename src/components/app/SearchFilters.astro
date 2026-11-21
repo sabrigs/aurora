@@ -1,0 +1,115 @@
+---
+// Botão de filtro ao lado da busca (navbar) e o dropdown com as opções. O estado fica em
+// lib/ui/explore-filters.ts; o Explore da Home escuta as mudanças e refaz a lista.
+---
+
+<button type="button" class="filter-button" id="filter-button" aria-haspopup="dialog" aria-label="Filters">
+	<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+		<path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+	</svg>
+</button>
+
+<dialog class="popover" id="filter-menu" aria-label="Filters">
+	<div class="menu">
+		<button type="button" class="menu-item check-item" role="menuitemcheckbox" aria-checked="false" data-hide-listed>
+			<span class="check-box" aria-hidden="true"></span>Hide content from lists
+		</button>
+
+		<p class="menu-section-title">Category</p>
+		<div class="menu" role="group" aria-label="Category">
+			<button type="button" class="menu-item menu-item--option" role="menuitemradio" data-category="all">All</button>
+			<button type="button" class="menu-item menu-item--option" role="menuitemradio" data-category="movie">Movies</button>
+			<button type="button" class="menu-item menu-item--option" role="menuitemradio" data-category="tv">TV shows</button>
+		</div>
+
+		<p class="menu-section-title">Streamings</p>
+		<div class="menu" role="group" aria-label="Streamings">
+			<button type="button" class="menu-item menu-item--option" role="menuitemradio" data-streamings="all">All</button>
+			<button type="button" class="menu-item menu-item--option" role="menuitemradio" data-streamings="mine">Just mine</button>
+		</div>
+	</div>
+</dialog>
+
+<style>
+	.filter-button {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 48px;
+		width: 48px;
+		height: 48px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background-color: var(--color-surface-raised);
+		color: var(--color-text);
+		box-shadow: 0 2px 5px 0 #0000001f;
+		cursor: pointer;
+	}
+
+	.filter-button:hover {
+		background-color: var(--color-surface-hover);
+	}
+
+	/* Ponto de destaque quando há algum filtro ativo. */
+	.filter-button[data-active]::after {
+		content: '';
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background-color: var(--color-solid);
+	}
+
+	.menu-section-title {
+		margin: 12px 0 0;
+		padding: 8px 0;
+		color: var(--color-text);
+		font-size: 1.0625rem;
+		font-weight: 600;
+	}
+</style>
+
+<script>
+	import { enableLightDismiss, openPopover } from '../../lib/ui/popover';
+	import { activeFilterCount, FILTERS_EVENT, getFilters, setFilters } from '../../lib/ui/explore-filters';
+	import type { Category, ExploreFilters, StreamingScope } from '../../lib/ui/explore-filters';
+
+	const button = document.getElementById('filter-button') as HTMLButtonElement;
+	const menu = document.getElementById('filter-menu') as HTMLDialogElement;
+	const hideListed = menu.querySelector<HTMLButtonElement>('[data-hide-listed]')!;
+	const categoryOptions = [...menu.querySelectorAll<HTMLButtonElement>('[data-category]')];
+	const streamingOptions = [...menu.querySelectorAll<HTMLButtonElement>('[data-streamings]')];
+
+	const render = (filters: ExploreFilters) => {
+		hideListed.setAttribute('aria-checked', String(filters.hideListed));
+		for (const option of categoryOptions) {
+			const selected = option.dataset.category === filters.category;
+			option.setAttribute('aria-checked', String(selected));
+			option.classList.toggle('menu-item--selected', selected);
+		}
+		for (const option of streamingOptions) {
+			const selected = option.dataset.streamings === filters.streamings;
+			option.setAttribute('aria-checked', String(selected));
+			option.classList.toggle('menu-item--selected', selected);
+		}
+		button.toggleAttribute('data-active', activeFilterCount(filters) > 0);
+	};
+
+	button.addEventListener('click', () => openPopover(menu, button));
+	enableLightDismiss(menu);
+
+	hideListed.addEventListener('click', () => setFilters({ hideListed: !getFilters().hideListed }));
+	categoryOptions.forEach((option) =>
+		option.addEventListener('click', () => setFilters({ category: option.dataset.category as Category })),
+	);
+	streamingOptions.forEach((option) =>
+		option.addEventListener('click', () => setFilters({ streamings: option.dataset.streamings as StreamingScope })),
+	);
+
+	document.addEventListener(FILTERS_EVENT, (event) => render((event as CustomEvent<ExploreFilters>).detail));
+	render(getFilters());
+</script>

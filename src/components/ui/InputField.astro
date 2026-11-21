@@ -1,26 +1,69 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 
-type Props = HTMLAttributes<'input'>;
+// Campo de texto único da Aurora (login, onboarding, busca). Cores dos tokens semânticos.
+//  - shape "rounded": raio de 8px (padrão, igual aos botões);
+//  - shape "pill": totalmente arredondado (ex.: busca da navbar).
+// Slots opcionais: "leading" (ex.: ícone) e "trailing" (ex.: botão de limpar).
+// Os atributos (id, name, type, placeholder…) vão para o <input>; `class` vai para o contêiner.
+interface Props extends HTMLAttributes<'input'> {
+  shape?: 'rounded' | 'pill';
+}
 
-const { class: className, ...attrs } = Astro.props;
+const { shape = 'rounded', class: className, ...attrs } = Astro.props;
 ---
 
-<input {...attrs} class:list={['input-field', className]} />
+<div class:list={['input-field', `input-field--${shape}`, className]}>
+  <slot name="leading" />
+  <input {...attrs} class="input-field__control" />
+  <slot name="trailing" />
+</div>
 
 <style>
   .input-field {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     height: 48px;
-    border: 0;
-    border-radius: 8px;
-    background: var(--color-surface-raised);
-    color: var(--color-text);
-    box-shadow: 0 2px 5px 0 #0000001f;
     padding-inline: 16px;
-    font-size: 1rem;
+    border-radius: 8px;
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    box-shadow: 0 2px 5px 0 #0000001f;
   }
 
-  .input-field::placeholder {
+  .input-field--pill {
+    border-radius: 999px;
+  }
+
+  .input-field:focus-within {
+    box-shadow: inset 0 0 0 2px var(--color-border-strong);
+  }
+
+  /* Erro de validação (aria-invalid no input). */
+  .input-field:has(.input-field__control[aria-invalid='true']) {
+    box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  }
+
+  .input-field__control {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 1rem;
+    outline: none;
+  }
+
+  .input-field__control::placeholder {
     color: var(--color-text-muted);
+  }
+
+  .input-field__control::-webkit-search-cancel-button {
+    display: none;
   }
 </style>
