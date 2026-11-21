@@ -2,7 +2,7 @@
 // Usa o "API Read Access Token" (v4), que fica somente no servidor.
 import { TMDB_READ_TOKEN } from 'astro:env/server';
 import { tmdbLanguage } from '../i18n';
-import { requestLang } from '../i18n/request-lang';
+import { requestLang } from '../i18n/request-context';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 

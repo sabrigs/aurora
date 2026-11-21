@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireUser } from '../../lib/auth/require-user';
-import { getOnTheater, getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
+import { getTitleDetails, getTrending, searchTitles, type TitlePage } from '../../lib/tmdb/titles';
 import { getCardProviders, getTitleStreamingProviders } from '../../lib/streaming/availability';
 
 const json = (body: unknown, status = 200, cacheControl = 'no-store') =>
@@ -12,7 +12,7 @@ const json = (body: unknown, status = 200, cacheControl = 'no-store') =>
 
 // Feed do Explore (trending) e busca, paginados para o scroll infinito.
 // Filtros opcionais: `category` (movie | tv) e `providers` (marcas de streaming, separadas por vírgula):
-// com `providers`, só voltam títulos disponíveis em algum deles no Brasil.
+// com `providers`, só voltam títulos disponíveis em algum deles no país da pessoa.
 export const GET: APIRoute = async ({ request, url }) => {
   const denied = await requireUser(request);
   if (denied) return denied;
@@ -41,14 +41,6 @@ export const GET: APIRoute = async ({ request, url }) => {
       case 'trending':
         result = await getTrending(page, category);
         break;
-      case 'theater': {
-        const region = url.searchParams.get('region') ?? '';
-        if (!/^[A-Z]{2}$/.test(region)) {
-          return json({ error: 'invalid_region' }, 400);
-        }
-        result = await getOnTheater(region, page);
-        break;
-      }
       case 'search': {
         const query = (url.searchParams.get('q') ?? '').trim();
         if (query.length === 0 || query.length > 100) {

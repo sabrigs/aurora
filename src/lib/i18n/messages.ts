@@ -103,9 +103,9 @@ const en: Record<string, string> = {
   'title.sameDirector': 'From the same director',
   'title.sameCreator': 'From the same creator',
   'title.notReleased': 'Not released yet.',
-  'title.comingTheaters': 'Not released yet. Coming to theaters in Brazil on {date}.',
+  'title.comingTheaters': 'Not released yet. Coming to theaters in your region ({country}) on {date}.',
   'title.expected': 'Not released yet. Expected on {date}.',
-  'title.notStreaming': 'Not available on streaming in Brazil.',
+  'title.notStreaming': 'Not available on streaming in your region ({country}).',
 
   // Episódios
   'ep.title': 'Episodes',
@@ -275,9 +275,9 @@ const ptBR: Record<string, string> = {
   'title.sameDirector': 'Do mesmo diretor',
   'title.sameCreator': 'Do mesmo criador',
   'title.notReleased': 'Ainda não lançado.',
-  'title.comingTheaters': 'Ainda não lançado. Estreia nos cinemas do Brasil em {date}.',
+  'title.comingTheaters': 'Ainda não lançado. Estreia nos cinemas da sua região ({country}) em {date}.',
   'title.expected': 'Ainda não lançado. Previsto para {date}.',
-  'title.notStreaming': 'Não disponível em streaming no Brasil.',
+  'title.notStreaming': 'Não disponível em streaming na sua região ({country}).',
 
   'ep.title': 'Episódios',
   'ep.progressAria': 'Progresso da série',

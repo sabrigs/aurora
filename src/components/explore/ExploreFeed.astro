@@ -52,6 +52,7 @@ const tr = serverT(Astro.locals);
 		import { getListedTitleKeys, getUserStreamings } from '../../lib/lists/store';
 		import { brandName } from '../../lib/streaming/canonical';
 		import { currentLang, t } from '../../lib/i18n';
+		import { currentRegion } from '../../lib/region';
 		import { isReturningVisit, loadScreenState, onLeave, saveScreenState } from '../../lib/ui/navigation';
 
 		type Item = {
@@ -70,8 +71,8 @@ const tr = serverT(Astro.locals);
 			providers?: { name: string; logoPath: string | null }[];
 		};
 
-		// O idioma entra na chave: os itens guardados (títulos, pôsteres, gêneros) são do idioma em que foram carregados.
-		const STATE_KEY = `aurora:explore:${currentLang()}`;
+		// Idioma e país entram na chave: os itens guardados (títulos, pôsteres, streamings) são do que valia ao carregá-los.
+		const STATE_KEY = `aurora:explore:${currentLang()}:${currentRegion()}`;
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
 		let currentSave: () => void = () => {};

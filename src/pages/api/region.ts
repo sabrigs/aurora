@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { requireUser } from '../../lib/auth/require-user';
 
-// Converte a coordenada do navegador em código de país (ex.: BR), usado no "On Theater".
+// Converte a coordenada do navegador em código de país (ex.: BR). Decide os streamings, cinemas e datas
+// do país da pessoa (ver lib/region/locate.ts).
 // Usa o serviço público do OpenStreetMap (Nominatim), que recebe as coordenadas.
 export const GET: APIRoute = async ({ request, url }) => {
   const denied = await requireUser(request);

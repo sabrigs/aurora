@@ -63,6 +63,10 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	markCurrentPage();
 	document.addEventListener('astro:page-load', markCurrentPage);
 
+	// País da pessoa pela geolocalização (pede permissão na primeira vez); decide streamings e cinemas.
+	void ensureRegion();
+	document.addEventListener('astro:page-load', () => void ensureRegion());
+
 	// Navbar sem fundo só no topo: passando de 40px de rolagem, o fundo volta (para o conteúdo não
 	// ficar por baixo dos botões sem contraste).
 	const updateHeaderSolid = () => {
@@ -92,6 +96,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	// Busca da navbar: campo na própria navbar (desktop) ou barra sob ela, aberta pela tab Search (mobile).
 	// Na Home, avisa o Explore a cada digitação; nas outras telas, Enter leva à Home com a busca feita.
 	import { announceSearch, clearSearch, setSearchOpen, setSearchQuery, syncSearchMode } from '../../lib/ui/search';
+	import { ensureRegion } from '../../lib/region/locate';
 
 	const searchForm = document.querySelector<HTMLFormElement>('[data-header-search]')!;
 	const searchInput = document.getElementById('header-search-input') as HTMLInputElement;

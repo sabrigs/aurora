@@ -5,11 +5,11 @@ import Button from '../components/ui/Button.astro';
 import Title from '../components/ui/Title.astro';
 import InputField from '../components/ui/InputField.astro';
 import { serverT } from '../lib/i18n';
-import { getTopBrazilProviders, type StreamingProvider } from '../lib/streaming/availability';
+import { getRegionProviders, type StreamingProvider } from '../lib/streaming/availability';
 
-// Os streamings suportados no Brasil (TMDB watch providers), em ordem alfabética.
+// Os streamings do país da pessoa (TMDB watch providers), em ordem alfabética.
 // Se a API falhar, a lista fica vazia e o usuário ainda pode concluir.
-const providers: StreamingProvider[] = await getTopBrazilProviders('movie').catch(() => []);
+const providers: StreamingProvider[] = await getRegionProviders('movie').catch(() => []);
 const tr = serverT(Astro.locals);
 const logoBase = 'https://image.tmdb.org/t/p/w92';
 ---

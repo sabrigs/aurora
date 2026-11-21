@@ -11,7 +11,7 @@ const { clearHeader = false } = Astro.props;
 const tokensStyle = `<style>${themeCss()}</style>`;
 ---
 <!DOCTYPE html>
-<html lang={Astro.locals.lang ?? 'en'} data-header-clear={clearHeader ? '' : undefined}>
+<html lang={Astro.locals.lang ?? 'en'} data-region={Astro.locals.region} data-header-clear={clearHeader ? '' : undefined}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

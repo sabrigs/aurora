@@ -1,14 +1,14 @@
 ---
 import { safeJson } from '../../lib/safe-json';
-import { getTopBrazilProviders } from '../../lib/streaming/availability';
+import { getRegionProviders } from '../../lib/streaming/availability';
 import { logoUrl } from '../../lib/tmdb/images';
 import { LANGS, serverT, toLang } from '../../lib/i18n';
 
 const tr = serverT(Astro.locals);
 const lang = toLang(Astro.locals.lang);
 
-// Os mesmos 5 streamings do onboarding, para adicionar pelo menu.
-const providers = await getTopBrazilProviders('movie').catch(() => []);
+// Os mesmos streamings do onboarding (os do país da pessoa), para adicionar pelo menu.
+const providers = await getRegionProviders('movie').catch(() => []);
 const providersForClient = providers.map((provider) => ({
 	id: provider.id,
 	name: provider.name,

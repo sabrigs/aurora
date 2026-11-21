@@ -1,7 +1,7 @@
 // Consultas de filmes e séries usadas pelas telas (Explore, detalhes, backdrop).
 import { getCardProviders, type CardProvider } from '../streaming/availability';
 import { tmdbFetch, type MediaType } from './client';
-import { requestLang } from '../i18n/request-lang';
+import { requestLang, requestRegion } from '../i18n/request-context';
 
 export interface TitleSummary {
   id: number;
@@ -77,42 +77,34 @@ export async function getTrending(page = 1, category?: MediaType): Promise<Title
   };
 }
 
-// Explore → "On Theater": filmes em cartaz na região do usuário (código ISO, ex.: BR).
-export async function getOnTheater(region: string, page = 1): Promise<TitlePage> {
-  const data = await tmdbFetch<Paged<RawTitle>>('/movie/now_playing', { page, region });
-  return {
-    items: data.results.map((item) => toSummary(item, 'movie')),
-    totalPages: Math.min(data.total_pages, MAX_PAGES),
-  };
-}
-
-// Filmes em cartaz no Brasil, usado para marcar "In theaters" nos detalhes.
-// Lê as páginas de now_playing (mesma fonte da aba On Theater), com cache de 1 hora.
+// Filmes em cartaz no país da pessoa, usado para marcar "In theaters" nos detalhes.
+// Lê as páginas de now_playing, com cache de 1 hora por país.
 const THEATER_CACHE_MS = 60 * 60 * 1000;
-let theaterCache: { ids: Set<number>; expires: number } | null = null;
+const theaterCache = new Map<string, { ids: Set<number>; expires: number }>();
 
-async function getBrazilTheaterIds(): Promise<Set<number>> {
-  if (theaterCache && theaterCache.expires > Date.now()) {
-    return theaterCache.ids;
+async function getTheaterIds(region: string): Promise<Set<number>> {
+  const cached = theaterCache.get(region);
+  if (cached && cached.expires > Date.now()) {
+    return cached.ids;
   }
 
-  const first = await tmdbFetch<Paged<RawTitle>>('/movie/now_playing', { page: 1, region: 'BR' });
+  const first = await tmdbFetch<Paged<RawTitle>>('/movie/now_playing', { page: 1, region });
   const ids = new Set(first.results.map((item) => item.id));
   const pages = Math.min(first.total_pages, 10);
   const rest = await Promise.all(
     Array.from({ length: pages - 1 }, (_, index) =>
-      tmdbFetch<Paged<RawTitle>>('/movie/now_playing', { page: index + 2, region: 'BR' }),
+      tmdbFetch<Paged<RawTitle>>('/movie/now_playing', { page: index + 2, region }),
     ),
   );
   rest.forEach((data) => data.results.forEach((item) => ids.add(item.id)));
 
-  theaterCache = { ids, expires: Date.now() + THEATER_CACHE_MS };
+  theaterCache.set(region, { ids, expires: Date.now() + THEATER_CACHE_MS });
   return ids;
 }
 
-export async function isInBrazilTheaters(mediaType: MediaType, id: number): Promise<boolean> {
+export async function isInTheaters(mediaType: MediaType, id: number): Promise<boolean> {
   if (mediaType !== 'movie') return false;
-  return (await getBrazilTheaterIds()).has(id);
+  return (await getTheaterIds(requestRegion())).has(id);
 }
 
 // Busca por título ou artista. Para artistas, entram os títulos conhecidos deles (known_for).
@@ -184,12 +176,12 @@ export interface TitleDetails extends TitleSummary {
   // Filme: diretor. Série: criador. Nulo quando a TMDB não informa.
   director: Director | null;
   // Lançamento: status da TMDB (ex.: "Released", "Post Production"), data global e, para filmes,
-  // a data de estreia nos cinemas do Brasil (YYYY-MM-DD).
+  // a data de estreia nos cinemas do país da pessoa (YYYY-MM-DD).
   status: string;
   // Temporadas de uma série (sem a temporada 0); 0 para filmes.
   seasons: number;
   releaseDate: string | null;
-  brazilReleaseDate: string | null;
+  regionReleaseDate: string | null;
   // Ano de lançamento (filme: estreia; série: primeira temporada) e, só para séries, o ano em que a
   // última temporada estreou. Nulos quando a TMDB não informa.
   year: number | null;
@@ -228,10 +220,10 @@ function lastSeasonYearOf(seasons: RawDetails['seasons']): number | null {
   return yearOf(last?.air_date);
 }
 
-// Primeira estreia em cinemas (tipos 2 e 3) no Brasil, se a TMDB tiver.
-function brazilTheatricalDate(results: NonNullable<RawDetails['release_dates']>['results']): string | null {
-  const brazil = results.find((country) => country.iso_3166_1 === 'BR');
-  const dates = (brazil?.release_dates ?? [])
+// Primeira estreia em cinemas (tipos 2 e 3) no país da pessoa, se a TMDB tiver.
+function theatricalDate(results: NonNullable<RawDetails['release_dates']>['results'], region: string): string | null {
+  const country = results.find((entry) => entry.iso_3166_1 === region);
+  const dates = (country?.release_dates ?? [])
     .filter((release) => release.type === 2 || release.type === 3)
     .map((release) => release.release_date.slice(0, 10))
     .sort();
@@ -284,7 +276,7 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
       ? raw.seasons.filter((season) => season.season_number >= 1 && season.episode_count > 0).length
       : (raw.number_of_seasons ?? 0),
     releaseDate: raw.release_date || raw.first_air_date || null,
-    brazilReleaseDate: brazilTheatricalDate(raw.release_dates?.results ?? []),
+    regionReleaseDate: theatricalDate(raw.release_dates?.results ?? [], requestRegion()),
     year: yearOf(raw.release_date || raw.first_air_date),
     lastSeasonYear: mediaType === 'tv' ? lastSeasonYearOf(raw.seasons) : null,
     trailers: pickTrailers(raw.videos?.results ?? []),
@@ -316,7 +308,7 @@ export interface RelatedTitle extends TitleSummary {
   seasons: number;
   year: number | null;
   lastSeasonYear: number | null;
-  // Streamings do título no Brasil (até 4), para os logos do card.
+  // Streamings do título no país da pessoa (até 4), para os logos do card.
   providers: CardProvider[];
 }
 

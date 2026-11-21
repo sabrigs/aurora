@@ -1,4 +1,5 @@
 import { currentLang } from '../i18n';
+import { currentRegion } from '../region';
 
 // Cache local (localStorage) dos dados dos cards: backdrop, nota, duração, anos etc. Esses dados mudam
 // pouco, então as telas pintam o card na hora, sem esperar a API, e só buscam o que falta.
@@ -14,12 +15,12 @@ export interface CardSummary {
   seasons: number;
   year: number | null;
   lastSeasonYear: number | null;
-  // Streamings do título no Brasil (até 4).
+  // Streamings do título no país da pessoa (até 4).
   providers: { name: string; logoPath: string | null }[];
 }
 
-// O idioma entra na chave: título, pôster e gênero mudam com ele.
-const prefix = () => `aurora:card:v3:${currentLang()}:`;
+// Idioma e país entram na chave: título, pôster e gênero mudam com o idioma; os streamings, com o país.
+const prefix = () => `aurora:card:v4:${currentLang()}:${currentRegion()}:`;
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 const keyFor = (mediaType: string, id: number) => `${prefix()}${mediaType}:${id}`;

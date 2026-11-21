@@ -3,16 +3,18 @@ import AppLayout from '../../../layouts/AppLayout.astro';
 import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
 import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
 import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
-import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
+import { getSameDirectorTitles, getTitleDetails, isInTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
 import { cardMetaRows, MAX_PROVIDER_LOGOS, providerPillWidth, seriesStatusTag } from '../../../lib/tmdb/format';
 import { backdropUrl } from '../../../lib/tmdb/card-image';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
 import type { MediaType } from '../../../lib/tmdb/client';
 import { localeOf, serverT, toLang } from '../../../lib/i18n';
+import { countryName } from '../../../lib/region';
 
 const lang = toLang(Astro.locals.lang);
 const tr = serverT(Astro.locals);
+const country = countryName(Astro.locals.region, lang);
 
 const mediaType = Astro.params.mediaType;
 const id = Number(Astro.params.id);
@@ -30,7 +32,7 @@ try {
 	[details, providers, inTheaters, series] = await Promise.all([
 		getTitleDetails(mediaType as MediaType, id),
 		getTitleStreamingProviders(mediaType as MediaType, id).catch(() => []),
-		isInBrazilTheaters(mediaType as MediaType, id).catch(() => false),
+		isInTheaters(mediaType as MediaType, id).catch(() => false),
 		mediaType === 'tv' ? getSeriesSeasons(id).catch(() => null) : null,
 	]);
 } catch {
@@ -43,9 +45,9 @@ const related: RelatedTitle[] = details.director
 	: [];
 const relatedHeading = details.mediaType === 'movie' ? tr('title.sameDirector') : tr('title.sameCreator');
 
-// Ainda não lançado: data de estreia no Brasil, ou a global, ou (sem datas) o status da TMDB.
+// Ainda não lançado: data de estreia no país da pessoa, ou a global, ou (sem datas) o status da TMDB.
 const today = new Date().toISOString().slice(0, 10);
-const releaseDate = details.brazilReleaseDate ?? details.releaseDate;
+const releaseDate = details.regionReleaseDate ?? details.releaseDate;
 const notReleased = releaseDate
 	? releaseDate > today
 	: ['Planned', 'In Production', 'Post Production', 'Rumored'].includes(details.status);
@@ -53,8 +55,8 @@ const formatDate = (date: string) =>
 	new Date(`${date}T00:00:00Z`).toLocaleDateString(localeOf(lang), { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const unreleasedMessage = !releaseDate
 	? tr('title.notReleased')
-	: details.brazilReleaseDate
-		? tr('title.comingTheaters', { date: formatDate(details.brazilReleaseDate) })
+	: details.regionReleaseDate
+		? tr('title.comingTheaters', { country, date: formatDate(details.regionReleaseDate) })
 		: tr('title.expected', { date: formatDate(releaseDate) });
 
 const category = details.mediaType === 'movie' ? tr('card.movie') : tr('card.series');
@@ -125,7 +127,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 				) : notReleased ? (
 					<p class="unavailable">{unreleasedMessage}</p>
 				) : (
-					<p class="unavailable">{tr('title.notStreaming')}</p>
+					<p class="unavailable">{tr('title.notStreaming', { country })}</p>
 				)}
 			</section>
 

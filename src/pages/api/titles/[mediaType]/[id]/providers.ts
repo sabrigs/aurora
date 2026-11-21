@@ -24,6 +24,7 @@ export const GET: APIRoute = async ({ request, params }) => {
     headers: {
       'content-type': 'application/json',
       'cache-control': 'private, max-age=3600',
+      vary: 'cookie',
     },
   });
 };
