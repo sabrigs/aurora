@@ -273,6 +273,15 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		display: none;
 	}
 
+	/* Tablet: não há espaço para centralizar a busca sem cobrir "Home" e "My lists": ela vai para a esquerda,
+	   depois do botão de voltar (quando há). */
+	@media (min-width: 768px) and (max-width: 1023px) {
+		.header-tools {
+			position: static;
+			transform: none;
+		}
+	}
+
 	@media (max-width: 767px) {
 		.desktop-nav {
 			display: none;
