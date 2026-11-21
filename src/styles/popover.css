@@ -14,7 +14,9 @@ dialog.popover {
   padding: 16px;
   overflow-x: hidden;
   overflow-y: auto;
-  border: 1px solid var(--color-border);
+  /* Sem contorno: o dropdown se separa do fundo pela cor e pela sombra. */
+  border: 0;
+  outline: none;
   border-radius: 12px;
   background-color: var(--color-surface-raised);
   color: var(--color-text);

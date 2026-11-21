@@ -319,11 +319,16 @@ const name = LIST_NAMES[kind];
 
 	/* Chips de filtro: streamings do usuário | situação. Rolam na horizontal quando não cabem (mobile). */
 	.chips {
+		/* Fixos sob a navbar ao rolar a lista, com fundo para os cards passarem por baixo. */
+		position: sticky;
+		top: var(--header-height);
+		z-index: 10;
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		margin-inline: -16px;
-		padding-inline: 16px;
+		padding: 8px 16px;
+		background-color: var(--color-bg);
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
