@@ -27,6 +27,8 @@ export function readCardSummary(mediaType: string, id: number): CardSummary | nu
       localStorage.removeItem(keyFor(mediaType, id));
       return null;
     }
+    // Entrada sem a lista de streamings (gravada por uma resposta antiga): descarta e busca de novo.
+    if (!Array.isArray(entry.summary.providers)) return null;
     return entry.summary;
   } catch {
     return null;

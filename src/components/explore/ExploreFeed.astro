@@ -138,7 +138,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			setCardBackdrop(node, backdropUrl(item.backdropPath, item.posterPath), eager);
 
 			// Guarda os dados do card: a tela de listas usa o mesmo cache e pinta na hora.
-			writeCardSummary(item.mediaType, item.id, {
+			// (Só quando a resposta traz os streamings: respostas antigas do cache do navegador não entram.)
+			if (item.providers) writeCardSummary(item.mediaType, item.id, {
 				backdropPath: item.backdropPath,
 				voteAverage: item.voteAverage,
 				runtime: item.runtime ?? null,
