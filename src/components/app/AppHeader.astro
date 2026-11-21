@@ -40,6 +40,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		<a href="/" aria-current={current('/')}>{tr('nav.home')}</a>
 		<a href="/lists" aria-current={current('/lists')}>{tr('nav.myLists')}</a>
 	</nav>
+	<span class="header-title" aria-hidden="true"></span>
 	<div class="avatar-slot">
 		<AvatarMenu />
 	</div>
@@ -75,6 +76,16 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	window.addEventListener('scroll', updateHeaderSolid, { passive: true });
 	document.addEventListener('astro:page-load', updateHeaderSolid);
 	updateHeaderSolid();
+
+	// Mobile: título da tela no centro da navbar. A tela o declara com [data-header-title] (AppLayout).
+	const headerTitle = document.querySelector<HTMLElement>('.header-title')!;
+	const updateHeaderTitle = () => {
+		const text = document.querySelector<HTMLElement>('[data-header-title]')?.dataset.headerTitle ?? '';
+		headerTitle.textContent = text;
+		document.documentElement.toggleAttribute('data-has-header-title', Boolean(text));
+	};
+	updateHeaderTitle();
+	document.addEventListener('astro:page-load', updateHeaderTitle);
 
 	// Botão de voltar: aparece em toda tela interna (fora da Home e de My lists). Volta no histórico
 	// quando há uma página anterior; se a tela foi aberta direto, vai para a tela "mãe".
@@ -241,6 +252,11 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		margin-left: 8px;
 	}
 
+	/* Só no mobile (título da tela no centro da navbar). */
+	.header-title {
+		display: none;
+	}
+
 	@media (max-width: 767px) {
 		.desktop-nav {
 			display: none;
@@ -272,6 +288,23 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 
 		.avatar-slot {
 			margin-left: auto;
+		}
+
+		.header-title {
+			display: block;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			/* Respeita os botões de 48px das pontas (16px de margem + 48px + 12px de respiro). */
+			max-width: calc(100% - 152px);
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: var(--color-text);
+			pointer-events: none;
 		}
 	}
 </style>

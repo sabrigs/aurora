@@ -15,9 +15,11 @@ interface Props {
 	flushTop?: boolean;
 	// Navbar sem fundo enquanto a tela está no topo (o conteúdo, como um backdrop, sobe até a borda).
 	clearHeader?: boolean;
+	// Mobile: título da tela, mostrado no centro da navbar (o <h1> da página fica só para leitores de tela).
+	headerTitle?: string;
 }
 
-const { fullWidth = false, requireAuth = false, flushTop = false, clearHeader = false } = Astro.props;
+const { fullWidth = false, requireAuth = false, flushTop = false, clearHeader = false, headerTitle } = Astro.props;
 
 // Dados para a proteção inline (roda no <head>, antes da primeira pintura).
 const gate = {
@@ -71,6 +73,7 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 		<AppHeader />
 	</div>
 	<main class:list={['app-main', { 'app-main--full': fullWidth, 'app-main--no-nav': !showBottomNav, 'app-main--flush-top': flushTop }]}>
+		{headerTitle && <div data-header-title={headerTitle} hidden />}
 		<slot />
 	</main>
 	<div transition:persist="bottom-nav">
@@ -94,6 +97,18 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 		font-size: 1.25rem;
 		font-weight: 600;
 		color: var(--color-text);
+	}
+
+	/* Mobile: o título da tela vai para a navbar (AppHeader); o <h1> fica só para leitores de tela. */
+	@media (max-width: 767px) {
+		html[data-has-header-title] .section-title {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
 	}
 
 	/* Modo busca: só o resultado aparece, sem listas nem títulos de seção. */

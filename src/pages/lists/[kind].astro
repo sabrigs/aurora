@@ -12,7 +12,7 @@ if (!LIST_KINDS.includes(kind)) {
 const name = tr(`list.${kind}`);
 ---
 
-<AppLayout fullWidth requireAuth flushTop>
+<AppLayout fullWidth requireAuth flushTop headerTitle={name}>
 	<section class="list" data-kind={kind}>
 		<h1 class="section-title">{name}</h1>
 
