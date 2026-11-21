@@ -45,8 +45,12 @@ const logoBase = 'https://image.tmdb.org/t/p/w92';
 					<p id="save-error" class="error" role="alert" hidden></p>
 
 					<div class="actions">
-						<Button id="back-button" variant="secondary" label="Back" class="pill" />
-						<Button id="finish-button" label="Finish" class="pill" />
+						<Button id="back-button" class="back" aria-label="Back" type="button">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M15 18l-6-6 6-6" />
+							</svg>
+						</Button>
+						<Button id="finish-button" label="Finish" class="finish" />
 					</div>
 				</div>
 			</div>
@@ -306,12 +310,29 @@ const logoBase = 'https://image.tmdb.org/t/p/w92';
 
 		.actions {
 			display: flex;
+			align-items: center;
+			justify-content: space-between;
 			gap: 12px;
 			width: 100%;
 		}
 
-		.actions > * {
-			flex: 1;
+		/* Voltar: botão circular só com ícone. */
+		.actions :global(.back) {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 48px;
+			width: 48px;
+			padding: 0;
+			border-radius: 50%;
+		}
+
+		.actions :global(.finish) {
+			flex: 0 0 auto;
+			min-width: 120px;
+			font: inherit;
+			font-size: 1rem;
+			font-weight: 600;
 		}
 
 		.error {

@@ -38,6 +38,7 @@ const SUPPORTED_BRANDS = new Set([
   'Apple TV',
   'Crunchyroll',
   'Disney Plus',
+  'Globoplay',
   'HBO Max',
   'MUBI',
   'Netflix',
