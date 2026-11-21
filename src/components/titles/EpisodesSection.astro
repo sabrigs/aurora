@@ -117,7 +117,6 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 	}
 
 	.season {
-		border: 1px solid var(--color-border);
 		border-radius: 12px;
 		background-color: var(--color-surface);
 		overflow: hidden;
@@ -204,16 +203,12 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 		list-style: none;
 	}
 
+	/* Sem divisórias entre os episódios; o still cresce até a altura do texto ao lado. */
 	.episode {
 		display: flex;
-		align-items: flex-start;
+		align-items: stretch;
 		gap: 12px;
-		padding: 12px 0;
-		border-top: 1px solid var(--color-border);
-	}
-
-	.episode:first-child {
-		border-top: 0;
+		padding: 8px 0;
 	}
 
 	.episode.is-upcoming {
@@ -229,7 +224,8 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 		flex: 0 0 auto;
 		width: 44px;
 		height: 44px;
-		margin: -8px 0 -8px -10px;
+		margin: 0 0 0 -10px;
+		align-self: center;
 		cursor: pointer;
 	}
 
@@ -270,9 +266,12 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 
 	.episode-still {
 		flex: 0 0 auto;
-		width: 112px;
-		aspect-ratio: 16 / 9;
-		border-radius: 8px;
+		align-self: stretch;
+		/* Altura = a do texto ao lado (~79px, com título, data e 2 linhas de sinopse); 140px de largura
+		   mantém a proporção de 16:9, e a imagem preenche o resto com o corte (cover). */
+		width: 140px;
+		min-height: 79px;
+		border-radius: 4px;
 		background-color: var(--color-surface-raised);
 		overflow: hidden;
 	}
@@ -287,6 +286,7 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 	.episode-text {
 		display: flex;
 		flex-direction: column;
+		justify-content: center;
 		gap: 2px;
 		flex: 1;
 		min-width: 0;
@@ -303,7 +303,7 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 
 	.episode-meta {
 		font-size: 0.875rem;
-		color: var(--color-text-muted);
+		color: var(--color-text-subtle);
 	}
 
 	.episode-overview {
@@ -312,25 +312,7 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 		font-size: 0.9375rem;
-		color: var(--color-text-muted);
-	}
-
-	.episode-upto {
-		flex: 0 0 auto;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
-		margin: -8px -10px -8px 0;
-		border: 0;
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-
-	.episode-upto:hover {
-		color: var(--color-text);
+		color: var(--color-text-subtle);
 	}
 
 	/* Mobile: sem o still, para o texto ter espaço. */

@@ -68,6 +68,8 @@ export const semanticTokens = (success: SuccessPaletteName): Record<string, stri
     // Texto
     '--color-text': gray(12),
     '--color-text-muted': gray(11),
+    // Um degrau abaixo do muted: sinopses e datas, para não competir com o título.
+    '--color-text-subtle': gray(10),
 
     // Ação primária (ex.: "Continue with email"): indigo com texto branco
     '--color-solid': indigo(9),

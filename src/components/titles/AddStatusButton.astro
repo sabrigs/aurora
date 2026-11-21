@@ -89,7 +89,7 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
     background-color: var(--color-added);
   }
 
-  /* O nome da lista só existe nos cards (ver abaixo). */
+  /* O nome da lista só existe nos cards e no topo da página do título (ver abaixo). */
   .status-badge__label {
     display: none;
   }
@@ -100,10 +100,10 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
 
   /* Só no desktop (largura de 768px ou mais, com mouse): no celular o badge é só a bolinha verde com o check. */
   @media (hover: hover) and (min-width: 768px) {
-    /* Nos cards: a bolinha (32px) fica dentro de um círculo escuro translúcido de 48px, igual ao Add.
+    /* Nos cards e no topo da página do título: a bolinha (32px) fica dentro de um círculo escuro translúcido de 48px, igual ao Add.
        Com o mouse sobre ela (ou logo depois de adicionar), vira uma pílula com o nome da lista; o nome
        entra e sai com fade e a largura anima. Sem o mouse, volta a ser só a bolinha. */
-    :global(.title-card) .status-badge {
+    :global(:is(.title-card, .hero)) .status-badge {
       box-sizing: border-box;
       justify-content: flex-start;
       width: 48px;
@@ -120,17 +120,17 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
         background-color 220ms ease;
     }
 
-    :global(.title-card) .status-badge__check {
+    :global(:is(.title-card, .hero)) .status-badge__check {
       width: 32px;
       height: 32px;
     }
 
-    :global(.title-card) .status-badge__check svg {
+    :global(:is(.title-card, .hero)) .status-badge__check svg {
       width: 20px;
       height: 20px;
     }
 
-    :global(.title-card) .status-badge__label {
+    :global(:is(.title-card, .hero)) .status-badge__label {
       display: block;
       padding-inline: 8px 8px;
       font-size: 1rem;
@@ -140,24 +140,24 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
       transition: opacity 160ms ease;
     }
 
-    :global(.title-card) .status-badge:hover,
-    :global(.title-card) .status-badge:focus-visible,
-    :global(.title-card) .status-badge.is-open {
+    :global(:is(.title-card, .hero)) .status-badge:hover,
+    :global(:is(.title-card, .hero)) .status-badge:focus-visible,
+    :global(:is(.title-card, .hero)) .status-badge.is-open {
       width: var(--expanded-width, auto);
       background-color: #00000077;
     }
 
-    :global(.title-card) .status-badge:hover .status-badge__label,
-    :global(.title-card) .status-badge:focus-visible .status-badge__label,
-    :global(.title-card) .status-badge.is-open .status-badge__label {
+    :global(:is(.title-card, .hero)) .status-badge:hover .status-badge__label,
+    :global(:is(.title-card, .hero)) .status-badge:focus-visible .status-badge__label,
+    :global(:is(.title-card, .hero)) .status-badge.is-open .status-badge__label {
       opacity: 1;
       /* O nome entra um instante depois de a pílula começar a abrir. */
       transition-delay: 90ms;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      :global(.title-card) .status-badge,
-      :global(.title-card) .status-badge__label {
+      :global(:is(.title-card, .hero)) .status-badge,
+      :global(:is(.title-card, .hero)) .status-badge__label {
         transition-duration: 1ms;
       }
     }

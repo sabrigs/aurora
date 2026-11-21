@@ -36,8 +36,6 @@ const isAired = (episode: Episode) => Boolean(episode.airDate) && episode.airDat
 
 const CHECK_ICON =
   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>';
-const UP_TO_HERE_ICON =
-  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12.5l4.5 4.5L16 8M11 16.5l1 1L21.5 8" /></svg>';
 
 export function initEpisodes(root: HTMLElement) {
   const ref: TitleRef = {
@@ -200,19 +198,6 @@ export function initEpisodes(root: HTMLElement) {
 
         item.append(label, still, text);
 
-        if (available && !implicitAll && !checked) {
-          const upTo = document.createElement('button');
-          upTo.type = 'button';
-          upTo.className = 'episode-upto';
-          upTo.innerHTML = UP_TO_HERE_ICON;
-          upTo.title = 'Mark all up to here';
-          upTo.setAttribute(
-            'aria-label',
-            `Mark all episodes up to season ${seasonNumber}, episode ${episode.episodeNumber} as watched`,
-          );
-          upTo.addEventListener('click', () => void markUpTo(seasonNumber, episode.episodeNumber));
-          item.append(upTo);
-        }
         return item;
       }),
     );
@@ -260,26 +245,6 @@ export function initEpisodes(root: HTMLElement) {
     const unmark = episodes.length > 0 && episodes.every((episode) => isWatched(seasonNumber, episode.episodeNumber));
     const refs = episodes.map((episode) => ({ seasonNumber, episodeNumber: episode.episodeNumber }));
     await apply(refs, !unmark);
-  };
-
-  // Marca tudo o que já foi lançado até o episódio escolhido, incluindo as temporadas anteriores.
-  const markUpTo = async (seasonNumber: number, episodeNumber: number) => {
-    try {
-      const upTo = seasonEls.map((details) => Number(details.dataset.season)).filter((number) => number <= seasonNumber);
-      const seasons = await Promise.all(upTo.map(async (number) => ({ number, episodes: await loadSeason(number) })));
-      const refs: EpisodeRef[] = [];
-      for (const season of seasons) {
-        for (const episode of season.episodes) {
-          if (!isAired(episode)) continue;
-          if (season.number === seasonNumber && episode.episodeNumber > episodeNumber) continue;
-          refs.push({ seasonNumber: season.number, episodeNumber: episode.episodeNumber });
-        }
-      }
-      await apply(refs, true);
-    } catch (error) {
-      console.error(error);
-      showNote("Couldn't load the episodes. Try again.");
-    }
   };
 
   // --- Eventos ------------------------------------------------------------
