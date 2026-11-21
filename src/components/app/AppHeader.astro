@@ -87,6 +87,26 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	updateHeaderTitle();
 	document.addEventListener('astro:page-load', updateHeaderTitle);
 
+	// Mobile, só na Home: a navbar some ao rolar para baixo e volta ao rolar para cima (ou no topo da página).
+	const root = document.documentElement;
+	let lastY = window.scrollY;
+	const updateHeaderHidden = () => {
+		const y = Math.max(window.scrollY, 0);
+		const delta = y - lastY;
+		const onHome = (window.location.pathname.replace(/\/$/, '') || '/') === '/';
+		if (!onHome || root.hasAttribute('data-search-open') || y < 40) {
+			root.removeAttribute('data-header-hidden');
+		} else if (Math.abs(delta) > 6) {
+			root.toggleAttribute('data-header-hidden', delta > 0);
+		}
+		lastY = y;
+	};
+	window.addEventListener('scroll', updateHeaderHidden, { passive: true });
+	document.addEventListener('astro:page-load', () => {
+		lastY = window.scrollY;
+		root.removeAttribute('data-header-hidden');
+	});
+
 	// Botão de voltar: aparece em toda tela interna (fora da Home e de My lists). Volta no histórico
 	// quando há uma página anterior; se a tela foi aberta direto, vai para a tela "mãe".
 	const backLink = document.querySelector<HTMLAnchorElement>('.header-back')!;
@@ -266,7 +286,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		.header-tools {
 			display: none;
 			position: fixed;
-			top: var(--header-height);
+			top: 16px;
 			left: 16px;
 			right: 16px;
 			transform: none;
@@ -282,12 +302,29 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 			display: flex;
 		}
 
+		/* Com a busca aberta, a navbar fica só com o filtro e o campo de busca. */
+		:global(html[data-search-open]) .header-back,
+		:global(html[data-search-open]) .header-title,
+		:global(html[data-search-open]) .avatar-slot {
+			display: none;
+		}
+
 		:global(html[data-search-open]) .header-search__clear {
 			display: inline-flex;
 		}
 
 		.avatar-slot {
 			margin-left: auto;
+		}
+
+		.app-header {
+			transition:
+				background-color 200ms ease,
+				transform 250ms ease;
+		}
+
+		:global(html[data-header-hidden]) .app-header {
+			transform: translateY(-100%);
 		}
 
 		.header-title {

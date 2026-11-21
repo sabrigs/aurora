@@ -117,10 +117,10 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 		display: none;
 	}
 
-	/* Mobile: a barra de busca aberta ocupa o espaço logo abaixo da navbar. */
+	/* Mobile: a busca aberta ocupa a própria navbar (só filtro + campo). */
 	@media (max-width: 767px) {
 		html[data-search-open] .app-main {
-			padding-top: calc(var(--header-height) + 24px + 56px);
+			padding-top: calc(var(--header-height) + 24px);
 		}
 	}
 </style>
