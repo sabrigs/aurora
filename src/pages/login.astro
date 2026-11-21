@@ -64,6 +64,11 @@ const backdrop = backdropPath
 		const sentEmail = document.getElementById('sent-email') as HTMLElement;
 		const changeEmail = document.getElementById('change-email') as HTMLButtonElement;
 
+		// Quem já está conectado (ex.: caiu aqui ao reabrir o app) segue direto para a Home.
+		void supabase.auth.getSession().then(({ data }) => {
+			if (data.session) window.location.replace('/');
+		});
+
 		const showError = (message: string) => {
 			errorText.textContent = message;
 			errorText.hidden = false;
