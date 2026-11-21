@@ -101,7 +101,7 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 
 	/* Mobile: o título da tela vai para a navbar (AppHeader); o <h1> fica só para leitores de tela. */
 	@media (max-width: 767px) {
-		html[data-has-header-title] .section-title {
+		.app-main:has([data-header-title]) .section-title {
 			position: absolute;
 			width: 1px;
 			height: 1px;

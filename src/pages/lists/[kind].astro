@@ -62,11 +62,15 @@ const name = tr(`list.${kind}`);
 		import { seriesStatusTag, setCardMeta, setCardProviders, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
 		import { enableDragScroll } from '../../lib/ui/drag-scroll';
 		import { t } from '../../lib/i18n';
-		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
+		import { isReturningVisit, loadScreenState, onLeave, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
 		import { releaseGate } from '../../lib/auth/gate';
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
+		// Ao sair da tela (ex.: abrir um título), guarda a posição da rolagem; ao voltar, ela é restaurada.
+		let saveScroll: () => void = () => {};
+		onLeave(() => saveScroll());
+
 		const setupList = () => {
 		const section = document.querySelector<HTMLElement>('.list')!;
 		const kind = section.dataset.kind as SystemKind;
@@ -92,6 +96,11 @@ const name = tr(`list.${kind}`);
 			statuses: [],
 		};
 		const STATE_KEY = `aurora:list:v2:${kind}`;
+		const SCROLL_KEY = `${STATE_KEY}:scroll`;
+		saveScroll = () => {
+			// Só salva com a lista na tela: ao sair de outra página, não sobrescreve.
+			if (document.querySelector('.list')) saveScreenState(SCROLL_KEY, window.scrollY);
+		};
 		let items: ListItem[] = [];
 		let streamings: StreamingRow[] = [];
 
@@ -290,7 +299,8 @@ const name = tr(`list.${kind}`);
 
 			try {
 				// Ao voltar de um título, mantém os chips escolhidos.
-				const saved = isReturningVisit() ? loadScreenState<typeof state>(STATE_KEY) : null;
+				const returning = isReturningVisit();
+				const saved = returning ? loadScreenState<typeof state>(STATE_KEY) : null;
 				if (saved && Array.isArray(saved.streamingBrands) && Array.isArray(saved.statuses)) {
 					Object.assign(state, saved);
 				}
@@ -298,6 +308,10 @@ const name = tr(`list.${kind}`);
 				[items, streamings] = await Promise.all([getListItems(kind), getUserStreamings()]);
 				renderChips();
 				await renderGrid();
+
+				// Os cards têm altura fixa: com a grade montada, dá para voltar para onde a pessoa estava.
+				const scrollY = returning ? loadScreenState<number>(SCROLL_KEY) : null;
+				if (typeof scrollY === 'number') window.scrollTo(0, scrollY);
 			} catch (error) {
 				console.error(error);
 				emptyList.hidden = false;

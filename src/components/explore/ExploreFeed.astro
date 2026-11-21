@@ -301,7 +301,7 @@ const tr = serverT(Astro.locals);
 
 			renderItems(saved.items);
 			if (saved.items.length === 0) showStatus(emptyMessage());
-			requestAnimationFrame(() => window.scrollTo(0, saved.scrollY));
+			window.scrollTo(0, saved.scrollY);
 		};
 
 		// Busca com debounce, vinda do campo da navbar (evento aurora:search).

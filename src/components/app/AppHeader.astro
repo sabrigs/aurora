@@ -82,9 +82,10 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 	const updateHeaderTitle = () => {
 		const text = document.querySelector<HTMLElement>('[data-header-title]')?.dataset.headerTitle ?? '';
 		headerTitle.textContent = text;
-		document.documentElement.toggleAttribute('data-has-header-title', Boolean(text));
 	};
 	updateHeaderTitle();
+	// Logo após a troca de página (antes de pintar), para o título não aparecer atrasado na navbar.
+	document.addEventListener('astro:after-swap', updateHeaderTitle);
 	document.addEventListener('astro:page-load', updateHeaderTitle);
 
 	// Mobile, só na Home: a navbar some ao rolar para baixo e volta ao rolar para cima (ou no topo da página).
