@@ -1,13 +1,4 @@
-import {
-  greenDark,
-  grassDark,
-  tealDark,
-  jadeDark,
-  mintDark,
-  redDark,
-  blueDark,
-  amberDark,
-} from '@radix-ui/colors';
+import { redDark, blueDark, amberDark } from '@radix-ui/colors';
 import { primitiveTokens } from './primitives';
 
 // Tokens semânticos da Aurora (só dark). Neutros e destaque (gray, indigo, white) apontam para os
@@ -18,39 +9,16 @@ import { primitiveTokens } from './primitives';
 
 export type Palette = Record<string, string>;
 
-// Escalas de cor de destaque selecionáveis (estados positivos, ex.: "assistido").
-export const successPalettes = {
-  green: greenDark,
-  grass: grassDark,
-  teal: tealDark,
-  jade: jadeDark,
-  mint: mintDark,
-} as const;
-
-export type SuccessPaletteName = keyof typeof successPalettes;
-
-// Escalas auxiliares (não selecionáveis no catálogo por enquanto).
+// Escalas auxiliares.
 const danger = redDark;
 const info = blueDark;
 const warning = amberDark;
-
-// Tokens de destaque de estado positivo, derivados de uma escala à escolha.
-export const successTokens = (success: SuccessPaletteName): Record<string, string> => {
-  const s: Palette = successPalettes[success];
-
-  return {
-    '--color-success-bg': s[`${success}3`] ?? '',
-    '--color-success-border': s[`${success}6`] ?? '',
-    '--color-success-solid': s[`${success}9`] ?? '',
-    '--color-success-text': s[`${success}11`] ?? '',
-  };
-};
 
 // Referências aos primitivos.
 const gray = (step: number) => `var(--gray-${step})`;
 const indigo = (step: number) => `var(--indigo-${step})`;
 
-export const semanticTokens = (success: SuccessPaletteName): Record<string, string> => {
+export const semanticTokens = (): Record<string, string> => {
   const d: Palette = danger;
   const i: Palette = info;
   const w: Palette = warning;
@@ -76,11 +44,14 @@ export const semanticTokens = (success: SuccessPaletteName): Record<string, stri
     '--color-solid-hover': indigo(10),
     '--color-on-solid': 'var(--white)',
 
-    // Destaque (estados positivos, ex.: badge "adicionado" / "assistido")
-    ...successTokens(success),
-
-    // Título já adicionado às listas (bolinha com o check nos cards)
+    // O verde da Aurora: único para tudo que é positivo (badge de "adicionado", checks de episódio,
+    // barra de progresso, situação "Ongoing", chips de status). Os demais tokens derivam dele.
     '--color-added': '#346d3f',
+    '--color-success-solid': 'var(--color-added)',
+    '--color-success-bg': 'color-mix(in srgb, var(--color-added) 30%, transparent)',
+    '--color-success-border': 'color-mix(in srgb, var(--color-added) 70%, transparent)',
+    // Texto verde sobre fundo escuro: o mesmo tom, clareado para manter a leitura.
+    '--color-success-text': 'color-mix(in srgb, var(--color-added) 50%, white)',
 
     // Seleção (checkboxes marcados)
     '--color-selected': indigo(9),
@@ -110,10 +81,10 @@ const fontTokens = {
 };
 
 // CSS completo dos tokens (a plataforma é só dark).
-export const themeCss = (success: SuccessPaletteName = 'green') =>
+export const themeCss = () =>
   toCss(':root', {
     'color-scheme': 'dark',
     ...fontTokens,
     ...primitiveTokens,
-    ...semanticTokens(success),
+    ...semanticTokens(),
   });

@@ -404,7 +404,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 	}
 
 	.status-tag--ongoing {
-		--tag-color: #3e9b4f;
+		--tag-color: var(--color-added);
 	}
 
 	.status-tag--ended {
@@ -544,9 +544,10 @@ const poster = posterUrl(details.posterPath, 'w342');
 		display: none;
 	}
 
+	/* Foto em retrato, na proporção dos pôsteres (2:3). */
 	.cast-photo {
 		display: block;
-		height: 180px;
+		aspect-ratio: 2 / 3;
 		overflow: hidden;
 		border-radius: 4px;
 		background-color: var(--color-surface-raised);
@@ -627,6 +628,24 @@ const poster = posterUrl(details.posterPath, 'w342');
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 16px;
+	}
+
+	/* Mesma altura dos cards das listas (220px): aqui o backdrop não precisa aparecer tanto.
+	   Em telas estreitas o texto quebra mais e o card ganha altura. */
+	.related .title-card {
+		height: 300px;
+	}
+
+	@media (min-width: 768px) {
+		.related .title-card {
+			height: 260px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.related .title-card {
+			height: 220px;
+		}
 	}
 
 	/* Overlay do trailer, no mesmo estilo dos dropdowns (borda, raio e botão translúcido). */

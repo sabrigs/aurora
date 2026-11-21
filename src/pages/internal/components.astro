@@ -8,16 +8,11 @@ import InputText from '../../components/forms/InputText.astro';
 import ComponentCard from '../../components/catalog/ComponentCard.astro';
 import AddStatusButton from '../../components/titles/AddStatusButton.astro';
 import '../../styles/popover.css';
-import { semanticTokens, successPalettes, successTokens } from '../../styles/tokens';
-import type { SuccessPaletteName } from '../../styles/tokens';
+import { semanticTokens } from '../../styles/tokens';
 
 // Página interna: não linkada no site e marcada como noindex.
-const successNames = Object.keys(successPalettes) as SuccessPaletteName[];
-const tokens = semanticTokens('green');
+const tokens = semanticTokens();
 const tokenNames = Object.keys(tokens);
-
-// Tokens de destaque de cada escala, para trocar ao vivo no catálogo.
-const palettes = Object.fromEntries(successNames.map((name) => [name, successTokens(name)]));
 ---
 
 <Layout>
@@ -32,14 +27,6 @@ const palettes = Object.fromEntries(successNames.map((name) => [name, successTok
 		</header>
 
 		<section class="controls" aria-label="Ajustes de tokens">
-			<label>
-				Destaque de sucesso
-				<select id="success-palette">
-					{successNames.map((name) => (
-						<option value={name} selected={name === 'green'}>{name}</option>
-					))}
-				</select>
-			</label>
 			<Button id="copy-tokens" variant="secondary" size="small">Copiar tokens (CSS)</Button>
 			<span id="copy-status" role="status" aria-live="polite"></span>
 		</section>
@@ -96,25 +83,12 @@ const palettes = Object.fromEntries(successNames.map((name) => [name, successTok
 		</div>
 	</main>
 
-	<script define:vars={{ palettes, tokenNames }}>
+	<script define:vars={{ tokenNames }}>
 		const root = document.documentElement;
-		const select = document.getElementById('success-palette');
 		const copyButton = document.getElementById('copy-tokens');
 		const copyStatus = document.getElementById('copy-status');
-		const valueLabels = document.querySelectorAll('[data-token-value]');
 
 		const readToken = (name) => getComputedStyle(root).getPropertyValue(name).trim();
-
-		const applyPalette = (name) => {
-			for (const [prop, value] of Object.entries(palettes[name])) {
-				root.style.setProperty(prop, value);
-			}
-			valueLabels.forEach((label) => {
-				label.textContent = readToken(label.dataset.tokenValue);
-			});
-		};
-
-		select.addEventListener('change', () => applyPalette(select.value));
 
 		copyButton.addEventListener('click', async () => {
 			const css = `:root {\n${tokenNames

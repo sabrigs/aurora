@@ -182,7 +182,7 @@
 }
 
 .title-card__status--ongoing {
-	--tag-color: #3e9b4f;
+	--tag-color: var(--color-added);
 }
 
 .title-card__status--ended {
