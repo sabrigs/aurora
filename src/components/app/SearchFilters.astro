@@ -3,7 +3,7 @@
 // lib/ui/explore-filters.ts; o Explore da Home escuta as mudanças e refaz a lista.
 ---
 
-<button type="button" class="filter-button" id="search-filter-button" aria-haspopup="dialog" aria-label="Filters">
+<button type="button" class="search-filter-button" id="search-filter-button" aria-haspopup="dialog" aria-label="Filters">
 	<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
 		<path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
 	</svg>
@@ -31,7 +31,7 @@
 </dialog>
 
 <style>
-	.filter-button {
+	.search-filter-button {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
@@ -48,12 +48,12 @@
 		cursor: pointer;
 	}
 
-	.filter-button:hover {
+	.search-filter-button:hover {
 		background-color: var(--color-surface-hover);
 	}
 
 	/* Ponto de destaque quando há algum filtro ativo. */
-	.filter-button[data-active]::after {
+	.search-filter-button[data-active]::after {
 		content: '';
 		position: absolute;
 		top: 10px;

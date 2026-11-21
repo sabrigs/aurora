@@ -132,7 +132,7 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		background-color: var(--color-bg);
 	}
 
-	/* Botão de voltar: círculo só com o ícone, no canto esquerdo (o mesmo do onboarding). */
+	/* Botão de voltar: círculo discreto só com o ícone, no canto esquerdo. */
 	.header-back {
 		display: inline-flex;
 		align-items: center;
@@ -141,13 +141,14 @@ const current = (href: string) => (isCurrent(href, path) ? 'page' : undefined);
 		width: 48px;
 		height: 48px;
 		border-radius: 50%;
-		background-color: var(--color-solid);
-		color: var(--color-on-solid);
+		/* Mesmo fundo discreto do botão de filtro da busca. */
+		background-color: var(--color-surface-raised);
+		color: var(--color-text);
 		box-shadow: 0 2px 5px 0 #0000001f;
 	}
 
 	.header-back:hover {
-		background-color: var(--color-solid-hover);
+		background-color: var(--color-surface-hover);
 	}
 
 	.header-back[hidden] {
