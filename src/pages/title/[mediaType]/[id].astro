@@ -4,7 +4,7 @@ import AddStatusButton from '../../../components/titles/AddStatusButton.astro';
 import EpisodesSection from '../../../components/titles/EpisodesSection.astro';
 import { getSeriesSeasons, type SeriesSeasons } from '../../../lib/tmdb/episodes';
 import { getSameDirectorTitles, getTitleDetails, isInBrazilTheaters, type RelatedTitle, type TitleDetails } from '../../../lib/tmdb/titles';
-import { cardMetaParts, MAX_PROVIDER_LOGOS, seriesStatusTag } from '../../../lib/tmdb/format';
+import { cardMetaRows, MAX_PROVIDER_LOGOS, providerPillWidth, seriesStatusTag } from '../../../lib/tmdb/format';
 import { backdropUrl } from '../../../lib/tmdb/card-image';
 import { getTitleStreamingProviders, type StreamingProvider } from '../../../lib/streaming/availability';
 import { logoUrl, posterUrl } from '../../../lib/tmdb/images';
@@ -188,7 +188,7 @@ const poster = posterUrl(details.posterPath, 'w342');
 					<h2 id="related">{relatedHeading}</h2>
 					<div class="related">
 						{related.map((item) => (
-							<article class="title-card is-loaded">
+							<article class={`title-card is-loaded${item.providers.length > 0 ? ' has-providers' : ''}`} style={`--providers-w: ${providerPillWidth(item.providers.length)}px`}>
 								{backdropUrl(item.backdropPath, item.posterPath) && (
 									<div class="title-card__media" aria-hidden="true">
 										<img class="title-card__backdrop" src={backdropUrl(item.backdropPath, item.posterPath)!} alt="" loading="lazy" decoding="async" />
@@ -196,26 +196,24 @@ const poster = posterUrl(details.posterPath, 'w342');
 									</div>
 								)}
 								<a class="title-card__cover" href={`/title/${item.mediaType}/${item.id}`} aria-label={item.title}></a>
-								<div class="title-card__top">
-									{seriesStatusTag(item.mediaType, item.status) && (
-										<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>
-									)}
-									{item.providers.length > 0 && (
-										<div class="title-card__providers">
-											{item.providers.slice(0, MAX_PROVIDER_LOGOS).map((provider) => (
-												<img class="title-card__provider" src={logoUrl(provider.logoPath) ?? ''} alt={provider.name} title={provider.name} loading="lazy" decoding="async" />
-											))}
-											{item.providers.length > MAX_PROVIDER_LOGOS && <span class="title-card__provider title-card__provider--more" aria-label="More streamings">+</span>}
-										</div>
-									)}
-								</div>
 								<div class="title-card__info">
 									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" loading="lazy" decoding="async" />}
 									<div class="title-card__text">
+										{seriesStatusTag(item.mediaType, item.status) && (
+											<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>
+										)}
 										<h3 class="title-card__title">{item.title}</h3>
-										<p class="title-card__meta">{cardMetaParts(item).map((part) => <span>{part}</span>)}</p>
+										<p class="title-card__meta">{cardMetaRows(item).map((row) => <span class="title-card__meta-row">{row.map((part) => <span>{part}</span>)}</span>)}</p>
 									</div>
 								</div>
+								{item.providers.length > 0 && (
+									<div class="title-card__providers">
+										{item.providers.slice(0, MAX_PROVIDER_LOGOS).map((provider) => (
+											<img class="title-card__provider" src={logoUrl(provider.logoPath) ?? ''} alt={provider.name} title={provider.name} loading="lazy" decoding="async" />
+										))}
+										{item.providers.length > MAX_PROVIDER_LOGOS && <span class="title-card__provider title-card__provider--more" aria-label="More streamings">+</span>}
+									</div>
+								)}
 								<AddStatusButton tmdbId={item.id} mediaType={item.mediaType} title={item.title} posterPath={item.posterPath} />
 							</article>
 						))}

@@ -127,11 +127,18 @@
 
 .title-card__meta {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 4px 16px;
+	flex-direction: column;
+	gap: 2px;
 	margin: 4px 0 0;
 	font-size: 0.9375rem;
 	color: #ffffffcc;
+}
+
+/* Linha 1: categoria, ano, (temporadas) e duração. Linha 2: gênero e nota. */
+.title-card__meta-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px 16px;
 }
 
 .title-card__progress {
@@ -150,7 +157,7 @@
 	align-items: center;
 	gap: 8px;
 	width: fit-content;
-	margin: 0;
+	margin: 0 0 8px;
 	padding: 4px 12px;
 	border-radius: 999px;
 	background-color: #00000066;
@@ -193,29 +200,21 @@
 	z-index: 3;
 }
 
-/* Canto superior esquerdo: situação da série e, ao lado, os streamings do título (margem de 16px).
-   Mesma altura (48px) do botão Add/badge do canto direito, para os dois ficarem alinhados. */
-.title-card__top {
+/* Streamings do título: pílula no canto inferior direito (16px de margem), com padding de 8px em volta
+   de logos de 24x24 sobrepostos. Com mais de 3 streamings, o último círculo é um "+". */
+.title-card__providers {
 	position: absolute;
-	top: 16px;
-	left: 16px;
-	/* Deixa o espaço do Add/badge aberto (pílula aberta tem ~125px) mais a margem. */
-	right: 160px;
+	right: 16px;
+	bottom: 16px;
 	z-index: 2;
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	height: 48px;
+	padding: 8px;
+	border-radius: 999px;
+	background-color: #73737b1f;
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
 	pointer-events: none;
-	overflow: hidden;
-}
-
-/* Logos dos streamings do título (até 3; com mais, um círculo com "+"). Sobrepostos, com anel escuro. */
-.title-card__providers {
-	display: flex;
-	align-items: center;
-	margin: 0;
-	padding-left: 6px;
 }
 
 .title-card__providers[hidden] {
@@ -227,22 +226,35 @@
 	box-sizing: border-box;
 	width: 24px;
 	height: 24px;
-	margin-left: -6px;
-	border: 2px solid #1c1c1e;
 	border-radius: 50%;
 	background-color: #1c1c1e;
 	object-fit: cover;
+	/* Anel escuro que separa os logos sobrepostos (não ocupa espaço). */
+	box-shadow: 0 0 0 1.5px #1c1c1e;
+}
+
+.title-card__provider + .title-card__provider {
+	margin-left: -8px;
 }
 
 .title-card__provider--more {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	background-color: #3a3a3c;
+	background-color: #2a2727;
 	color: #fff;
-	font-size: 1rem;
-	font-weight: 500;
+	font-size: 1.125rem;
+	font-weight: 400;
 	line-height: 1;
+}
+
+/* As informações não passam por baixo da pílula de streamings (--providers-w é a largura dela). */
+.title-card.has-providers .title-card__meta {
+	padding-right: calc(var(--providers-w, 0px) + 8px);
+}
+
+.title-card__meta-row > span {
+	white-space: nowrap;
 }
 
 /* O "Add" dos cards só aparece com o mouse sobre o card (ou com o foco nele). Sem mouse (toque), fica sempre visível.
