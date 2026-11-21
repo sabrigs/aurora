@@ -22,13 +22,15 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		<article class="title-card">
 			<div class="title-card__media" aria-hidden="true"><img class="title-card__backdrop" alt="" decoding="async" /><div class="title-card__blur"><img alt="" decoding="async" /></div></div>
 			<a class="title-card__cover" href="/"></a>
+			<div class="title-card__top">
+				<span class="title-card__status" hidden></span>
+				<div class="title-card__providers" hidden></div>
+			</div>
 			<div class="title-card__info">
 				<img class="title-card__poster" alt="" loading="lazy" decoding="async" hidden />
 				<div class="title-card__text">
-					<span class="title-card__status" hidden></span>
 					<h2 class="title-card__title"></h2>
 					<p class="title-card__meta"></p>
-					<div class="title-card__providers" hidden></div>
 				</div>
 			</div>
 			<AddStatusButton tmdbId={0} mediaType="movie" title="" posterPath={null} />

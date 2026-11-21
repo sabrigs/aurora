@@ -40,6 +40,34 @@ const { tmdbId, mediaType, title, posterPath } = Astro.props;
   }
 
   .add-button,
+  .status-badge {
+    height: 48px;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+
+  .add-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 79px;
+    padding: 0;
+    line-height: 1;
+    border: 0;
+    /* Translúcido: funciona sobre backdrops e sobre o fundo da página. */
+    background-color: #00000055;
+    color: #fff;
+    font-size: 1.0625rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  .add-button:hover {
+    background-color: #00000077;
+  }
+
   /* Badge: bolinha verde com o check. */
   .status-badge {
     display: inline-flex;

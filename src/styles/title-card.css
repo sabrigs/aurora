@@ -150,7 +150,7 @@
 	align-items: center;
 	gap: 8px;
 	width: fit-content;
-	margin: 0 0 8px;
+	margin: 0;
 	padding: 4px 12px;
 	border-radius: 999px;
 	background-color: #00000066;
@@ -193,11 +193,28 @@
 	z-index: 3;
 }
 
+/* Canto superior esquerdo: situação da série e, ao lado, os streamings do título (margem de 16px).
+   Mesma altura (48px) do botão Add/badge do canto direito, para os dois ficarem alinhados. */
+.title-card__top {
+	position: absolute;
+	top: 16px;
+	left: 16px;
+	/* Deixa o espaço do Add/badge aberto (pílula aberta tem ~125px) mais a margem. */
+	right: 160px;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 48px;
+	pointer-events: none;
+	overflow: hidden;
+}
+
 /* Logos dos streamings do título (até 3; com mais, um círculo com "+"). Sobrepostos, com anel escuro. */
 .title-card__providers {
 	display: flex;
 	align-items: center;
-	margin: 8px 0 0;
+	margin: 0;
 	padding-left: 6px;
 }
 

@@ -196,22 +196,24 @@ const poster = posterUrl(details.posterPath, 'w342');
 									</div>
 								)}
 								<a class="title-card__cover" href={`/title/${item.mediaType}/${item.id}`} aria-label={item.title}></a>
+								<div class="title-card__top">
+									{seriesStatusTag(item.mediaType, item.status) && (
+										<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>
+									)}
+									{item.providers.length > 0 && (
+										<div class="title-card__providers">
+											{item.providers.slice(0, MAX_PROVIDER_LOGOS).map((provider) => (
+												<img class="title-card__provider" src={logoUrl(provider.logoPath) ?? ''} alt={provider.name} title={provider.name} loading="lazy" decoding="async" />
+											))}
+											{item.providers.length > MAX_PROVIDER_LOGOS && <span class="title-card__provider title-card__provider--more" aria-label="More streamings">+</span>}
+										</div>
+									)}
+								</div>
 								<div class="title-card__info">
 									{item.posterPath && <img class="title-card__poster" src={posterUrl(item.posterPath, 'w185') ?? ''} alt="" loading="lazy" decoding="async" />}
 									<div class="title-card__text">
-										{seriesStatusTag(item.mediaType, item.status) && (
-											<span class={`title-card__status title-card__status--${seriesStatusTag(item.mediaType, item.status)!.tone}`}>{seriesStatusTag(item.mediaType, item.status)!.label}</span>
-										)}
 										<h3 class="title-card__title">{item.title}</h3>
 										<p class="title-card__meta">{cardMetaParts(item).map((part) => <span>{part}</span>)}</p>
-										{item.providers.length > 0 && (
-											<div class="title-card__providers">
-												{item.providers.slice(0, MAX_PROVIDER_LOGOS).map((provider) => (
-													<img class="title-card__provider" src={logoUrl(provider.logoPath) ?? ''} alt={provider.name} title={provider.name} loading="lazy" decoding="async" />
-												))}
-												{item.providers.length > MAX_PROVIDER_LOGOS && <span class="title-card__provider title-card__provider--more" aria-label="More streamings">+</span>}
-											</div>
-										)}
 									</div>
 								</div>
 								<AddStatusButton tmdbId={item.id} mediaType={item.mediaType} title={item.title} posterPath={item.posterPath} />
