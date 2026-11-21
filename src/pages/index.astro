@@ -8,7 +8,8 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 	<h1 class="sr-only">Home</h1>
 
 	<div class="home">
-		<section class="lists" aria-label="My lists">
+		<section class="lists" aria-labelledby="lists-title">
+			<h2 id="lists-title" class="section-title">Your lists</h2>
 			<div class="cards">
 				<ListCard kind="to_watch" name="To watch" />
 				<ListCard kind="watching" name="Watching" />
@@ -36,6 +37,13 @@ import ExploreFeed from '../components/explore/ExploreFeed.astro';
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
+		padding-top: 16px;
+	}
+
+	.lists {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
 	.sr-only {

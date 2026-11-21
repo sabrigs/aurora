@@ -86,8 +86,17 @@ const showBottomNav = pathname === '/' || pathname === '/lists';
 		visibility: hidden;
 	}
 
-	/* Modo busca: só o resultado aparece, sem listas nem abas. */
-	html[data-search='on'] .home .lists {
+	/* Título de seção da Home ("Your lists", "Find new content"). */
+	.section-title {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	/* Modo busca: só o resultado aparece, sem listas nem títulos de seção. */
+	html[data-search='on'] .home .lists,
+	html[data-search='on'] .explore .section-title {
 		display: none;
 	}
 
