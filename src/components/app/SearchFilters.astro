@@ -11,8 +11,8 @@
 
 <dialog class="popover" id="search-filter-menu" aria-label="Filters">
 	<div class="menu">
-		<button type="button" class="menu-item check-item" role="menuitemcheckbox" aria-checked="false" data-hide-listed>
-			<span class="check-box" aria-hidden="true"></span>Hide content from lists
+		<button type="button" class="menu-item check-item" role="menuitemcheckbox" aria-checked="false" data-show-listed>
+			<span class="check-box" aria-hidden="true"></span>Show content from my lists
 		</button>
 
 		<p class="menu-section-title">Category</p>
@@ -80,12 +80,13 @@
 
 	const button = document.getElementById('search-filter-button') as HTMLButtonElement;
 	const menu = document.getElementById('search-filter-menu') as HTMLDialogElement;
-	const hideListed = menu.querySelector<HTMLButtonElement>('[data-hide-listed]')!;
+	const showListed = menu.querySelector<HTMLButtonElement>('[data-show-listed]')!;
 	const categoryOptions = [...menu.querySelectorAll<HTMLButtonElement>('[data-category]')];
 	const streamingOptions = [...menu.querySelectorAll<HTMLButtonElement>('[data-streamings]')];
 
 	const render = (filters: ExploreFilters) => {
-		hideListed.setAttribute('aria-checked', String(filters.hideListed));
+		// O filtro guarda "esconder"; a caixa mostra o inverso (marcada = mostra o que já está nas listas).
+		showListed.setAttribute('aria-checked', String(!filters.hideListed));
 		for (const option of categoryOptions) {
 			const selected = option.dataset.category === filters.category;
 			option.setAttribute('aria-checked', String(selected));
@@ -102,7 +103,7 @@
 	button.addEventListener('click', () => openPopover(menu, button));
 	enableLightDismiss(menu);
 
-	hideListed.addEventListener('click', () => setFilters({ hideListed: !getFilters().hideListed }));
+	showListed.addEventListener('click', () => setFilters({ hideListed: !getFilters().hideListed }));
 	categoryOptions.forEach((option) =>
 		option.addEventListener('click', () => setFilters({ category: option.dataset.category as Category })),
 	);

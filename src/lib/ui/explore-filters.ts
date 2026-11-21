@@ -4,7 +4,7 @@ export type Category = 'all' | 'movie' | 'tv';
 export type StreamingScope = 'all' | 'mine';
 
 export interface ExploreFilters {
-  // Esconde os títulos que já estão em alguma das listas do usuário.
+  // Esconde os títulos que já estão em alguma das listas do usuário (padrão: ligado).
   hideListed: boolean;
   category: Category;
   streamings: StreamingScope;
@@ -12,7 +12,7 @@ export interface ExploreFilters {
 
 export const FILTERS_EVENT = 'aurora:filters';
 
-export const DEFAULT_FILTERS: ExploreFilters = { hideListed: false, category: 'all', streamings: 'all' };
+export const DEFAULT_FILTERS: ExploreFilters = { hideListed: true, category: 'all', streamings: 'all' };
 
 let current: ExploreFilters = { ...DEFAULT_FILTERS };
 
@@ -29,6 +29,8 @@ export const setFilters = (next: Partial<ExploreFilters>) => {
   document.dispatchEvent(new CustomEvent(FILTERS_EVENT, { detail: getFilters() }));
 };
 
-// Quantos filtros estão ativos (para marcar o botão da navbar).
+// Quantos filtros estão diferentes do padrão (para marcar o botão da navbar).
 export const activeFilterCount = (filters: ExploreFilters = current) =>
-  Number(filters.hideListed) + Number(filters.category !== 'all') + Number(filters.streamings !== 'all');
+  Number(filters.hideListed !== DEFAULT_FILTERS.hideListed) +
+  Number(filters.category !== DEFAULT_FILTERS.category) +
+  Number(filters.streamings !== DEFAULT_FILTERS.streamings);
