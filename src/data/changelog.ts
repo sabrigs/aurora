@@ -19,6 +19,112 @@ export interface ChangelogVersion {
 
 export const versions: ChangelogVersion[] = [
   {
+    version: 'v4',
+    date: '2026-11-21',
+    model: 'Claude Sonnet 5.5',
+    cost: '~US$ 40',
+    headline: 'Made for where you are',
+    intro:
+      'Aurora now speaks Portuguese, finds what’s streaming in your country, and has a cleaner, more cinematic look from the navbar to the title page.',
+    sections: [
+      {
+        kind: 'New',
+        items: [
+          {
+            title: 'Language',
+            text: 'Pick English or Português from the account menu. The interface, and the titles, posters and synopses, switch too when a translation is available.',
+          },
+          {
+            title: 'Streaming where you are',
+            text: 'With your permission, Aurora uses your location to show the services, theaters and release dates for your country. The services you already picked always stay.',
+          },
+          {
+            title: 'Search filters',
+            text: 'A filter button next to the search: movies or series, only your streamings, and hide what’s already in your lists (on by default).',
+          },
+          {
+            title: 'Filter chips in your lists',
+            text: 'Tap your streamings or Ongoing / Ended to filter a list. The chips stay pinned under the navbar as you scroll.',
+          },
+          {
+            title: 'Streaming logos on every card',
+            text: 'See at a glance which services have a title, right on its card.',
+          },
+          {
+            title: 'A smarter Add button',
+            text: 'Add shows up when you hover a card. Once added, the green check tells you which list the title is in.',
+          },
+          {
+            title: 'Release years',
+            text: 'Cards show when a movie came out, or the span of years for a series.',
+          },
+          {
+            title: 'Back button',
+            text: 'One back button in the navbar, on every inner page.',
+          },
+          {
+            title: 'List previews',
+            text: 'Each list shows a 2×2 of its latest posters, with the number of titles next to it.',
+          },
+        ],
+      },
+      {
+        kind: 'Improved',
+        items: [
+          {
+            title: 'A more cinematic title page',
+            text: 'The backdrop now reaches the top of the screen, with a soft glow of its colors flowing into the page.',
+          },
+          {
+            title: 'Cleaner cards',
+            text: 'No borders, softer backdrops, a shadow behind the poster, and the info on two clear lines. Series show their seasons instead of the episode length.',
+          },
+          {
+            title: 'Faster images',
+            text: 'Backdrops and posters load sooner and are remembered, so screens don’t reload what you’ve already seen.',
+          },
+          {
+            title: 'Simpler episodes',
+            text: 'Bigger thumbnails, softer text, and a single check to mark an episode.',
+          },
+          {
+            title: 'Bigger cast photos',
+            text: 'Portrait photos, in the same proportion as posters.',
+          },
+          {
+            title: 'Consistent look',
+            text: 'The navbar buttons, the green and the inputs now look the same everywhere.',
+          },
+          {
+            title: 'On your phone',
+            text: 'The Add button is always visible on touch screens, and the lists carousel can be dragged with a mouse.',
+          },
+          {
+            title: 'More services',
+            text: 'Globoplay is now an option for your streamings.',
+          },
+        ],
+      },
+      {
+        kind: 'Fixed',
+        items: [
+          {
+            title: 'No more jumping',
+            text: 'The title page no longer shifts while the Add button loads, and the flash when opening a title is gone.',
+          },
+          {
+            title: 'Steady cards',
+            text: 'Backdrops no longer change after a card appears, and the blur shows up together with the image.',
+          },
+          {
+            title: 'Carousel on narrow screens',
+            text: 'The lists on Home can now be scrolled with a mouse.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     version: 'v3',
     date: '2026-11-08',
     model: 'Claude Sonnet 5.5',
