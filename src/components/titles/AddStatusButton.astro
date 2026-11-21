@@ -58,8 +58,10 @@ const tr = serverT(Astro.locals);
     align-items: center;
     justify-content: center;
     gap: 6px;
-    width: 79px;
-    padding: 0;
+    /* 79px no mínimo ("Add"); cresce com o texto traduzido ("Adicionar"). */
+    min-width: 79px;
+    padding: 0 16px;
+    white-space: nowrap;
     line-height: 1;
     border: 0;
     /* Translúcido: funciona sobre backdrops e sobre o fundo da página. */
