@@ -2,6 +2,7 @@
 // marcar a série como assistida (todos os episódios entram como assistidos) e removê-la de uma lista (o progresso é apagado).
 import { apiFetch } from '../api';
 import { confirmDialog } from '../ui/confirm';
+import { t } from '../i18n';
 import { episodeKey, getWatchedEpisodes, type EpisodeRef } from './progress';
 import {
   markFavorite,
@@ -40,7 +41,7 @@ const em = (text: string) => {
   return element;
 };
 
-const LIST_NAMES: Partial<Record<SystemKind, string>> = { watching: 'Watching', watched: 'Watched' };
+const LIST_KEYS: Partial<Record<SystemKind, string>> = { watching: 'list.watching', watched: 'list.watched' };
 
 // Mostra o diálogo de confirmação e marca a série inteira. Devolve true se a série acabou em "Watched".
 async function confirmMarkWatched(ref: TitleRef, closeMenu: () => void): Promise<boolean> {
@@ -55,18 +56,24 @@ async function confirmMarkWatched(ref: TitleRef, closeMenu: () => void): Promise
   }
 
   const done = total - missing;
-  const upcoming = aired.ended ? '' : " Episodes that haven't aired yet won't be marked.";
+  const upcoming = aired.ended ? '' : t('flow.upcoming');
   const partial = done > 0;
 
   closeMenu();
   return confirmDialog({
-    title: partial ? 'Mark the remaining episodes as watched?' : 'Mark the whole series as watched?',
+    title: partial ? t('flow.markRemainingTitle') : t('flow.markWholeTitle'),
     body: partial
-      ? [`You've watched ${done} of ${total} episodes. The other ${missing} will be marked as watched, and `, em(ref.title), ` will move to Watched.${upcoming}`]
-      : [em(ref.title), ` will move to Watched, and ${total === 1 ? 'its only episode' : `all ${total} episodes`} will be marked as watched.${upcoming}`],
-    confirmLabel: 'Mark all as watched',
-    busyLabel: 'Marking…',
-    errorMessage: "Couldn't mark the episodes. Try again.",
+      ? [t('flow.markRemainingBody1', { done, total, missing }), em(ref.title), t('flow.markRemainingBody2', { upcoming })]
+      : [
+          em(ref.title),
+          t('flow.markWholeBody2', {
+            episodes: total === 1 ? t('flow.onlyEpisode') : t('flow.allEpisodes', { n: total }),
+            upcoming,
+          }),
+        ],
+    confirmLabel: t('flow.markAll'),
+    busyLabel: t('flow.marking'),
+    errorMessage: t('flow.markError'),
     onConfirm: () => markSeriesWatched(ref, aired.episodes),
   });
 }
@@ -78,11 +85,17 @@ async function confirmRemove(ref: TitleRef, kind: SystemKind, closeMenu: () => v
 
   closeMenu();
   return confirmDialog({
-    title: `Remove from ${LIST_NAMES[kind] ?? 'this list'}?`,
-    body: ['Your progress on ', `${count} ${count === 1 ? 'episode' : 'episodes'}`, ' of ', em(ref.title), ' will be cleared.'],
-    confirmLabel: 'Remove and clear progress',
-    busyLabel: 'Removing…',
-    errorMessage: "Couldn't remove the series. Try again.",
+    title: t('flow.removeTitle', { list: LIST_KEYS[kind] ? t(LIST_KEYS[kind]!) : t('flow.thisList') }),
+    body: [
+      t('flow.removeBody1'),
+      t(count === 1 ? 'flow.episode' : 'flow.episodes', { n: count }),
+      t('flow.removeBody2'),
+      em(ref.title),
+      t('flow.removeBody3'),
+    ],
+    confirmLabel: t('flow.removeConfirm'),
+    busyLabel: t('flow.removing'),
+    errorMessage: t('flow.removeError'),
     onConfirm: () => removeSeriesFromList(kind, ref),
   });
 }

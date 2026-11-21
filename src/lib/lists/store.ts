@@ -16,7 +16,7 @@ export interface TitleRef {
 export interface ListSummary {
   kind: SystemKind;
   count: number;
-  recent: { title: string; posterPath: string | null }[];
+  recent: { tmdbId: number; mediaType: MediaType; title: string; posterPath: string | null }[];
 }
 
 export interface StreamingRow {
@@ -294,7 +294,7 @@ async function fetchListSummaries(): Promise<ListSummary[]> {
 
       const { data: recent, error: recentError } = await supabase
         .from('list_items')
-        .select('title, poster_path')
+        .select('tmdb_id, media_type, title, poster_path')
         .eq('list_id', list.id)
         .order('added_at', { ascending: false })
         .limit(4);
@@ -303,10 +303,14 @@ async function fetchListSummaries(): Promise<ListSummary[]> {
       return {
         kind,
         count: list.list_items?.[0]?.count ?? 0,
-        recent: (recent ?? []).map((row: { title: string; poster_path: string | null }) => ({
-          title: row.title,
-          posterPath: row.poster_path,
-        })),
+        recent: (recent ?? []).map(
+          (row: { tmdb_id: number; media_type: MediaType; title: string; poster_path: string | null }) => ({
+            tmdbId: row.tmdb_id,
+            mediaType: row.media_type,
+            title: row.title,
+            posterPath: row.poster_path,
+          }),
+        ),
       };
     }),
   );

@@ -2,10 +2,13 @@
 // Feed do Explore (trending, busca e grade com scroll infinito).
 // Os filtros (categoria, streamings, esconder o que já está nas listas) vêm do botão de filtro da navbar.
 import AddStatusButton from '../titles/AddStatusButton.astro';
+import { serverT } from '../../lib/i18n';
+
+const tr = serverT(Astro.locals);
 ---
 
 	<section class="explore" aria-labelledby="explore-title">
-		<h2 id="explore-title" class="section-title">Find new content</h2>
+		<h2 id="explore-title" class="section-title">{tr('home.findNew')}</h2>
 
 		<div id="explore-status" class="explore-status" role="status" hidden>
 			<p id="explore-status-text"></p>
@@ -48,6 +51,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		import type { ExploreFilters } from '../../lib/ui/explore-filters';
 		import { getListedTitleKeys, getUserStreamings } from '../../lib/lists/store';
 		import { brandName } from '../../lib/streaming/canonical';
+		import { currentLang, t } from '../../lib/i18n';
 		import { isReturningVisit, loadScreenState, onLeave, saveScreenState } from '../../lib/ui/navigation';
 
 		type Item = {
@@ -66,7 +70,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			providers?: { name: string; logoPath: string | null }[];
 		};
 
-		const STATE_KEY = 'aurora:explore';
+		// O idioma entra na chave: os itens guardados (títulos, pôsteres, gêneros) são do idioma em que foram carregados.
+		const STATE_KEY = `aurora:explore:${currentLang()}`;
 
 		// A navegação troca a página sem recarregar o script, então a tela é montada a cada visita.
 		let currentSave: () => void = () => {};
@@ -97,7 +102,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 		};
 
 		const emptyMessage = () =>
-			state.query ? `No results for "${state.query}".` : 'Nothing to show here right now.';
+			state.query ? t('explore.noResults', { query: state.query }) : t('explore.nothing');
 
 		const showStatus = (message: string | null, action?: { label: string; run: () => void }) => {
 			statusBox.hidden = !message;
@@ -140,6 +145,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 			// Guarda os dados do card: a tela de listas usa o mesmo cache e pinta na hora.
 			// (Só quando a resposta traz os streamings: respostas antigas do cache do navegador não entram.)
 			if (item.providers) writeCardSummary(item.mediaType, item.id, {
+				title: item.title,
+				posterPath: item.posterPath,
 				backdropPath: item.backdropPath,
 				voteAverage: item.voteAverage,
 				runtime: item.runtime ?? null,
@@ -205,7 +212,7 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 					const brands = [...new Set((await getUserStreamings()).map((row) => brandName(row.providerName)))];
 					if (requestId !== state.requestId) return;
 					if (brands.length === 0) {
-						showStatus('You have not picked any streamings yet. Add them in your account menu.');
+						showStatus(t('explore.noStreamings'));
 						state.totalPages = 1;
 						state.page = 1;
 						return;
@@ -237,8 +244,8 @@ import AddStatusButton from '../titles/AddStatusButton.astro';
 				if (requestId !== state.requestId) return;
 				console.error(error);
 				state.failed = true;
-				showStatus('We could not load titles. Try again.', {
-					label: 'Try again',
+				showStatus(t('explore.loadError'), {
+					label: t('common.tryAgain'),
 					run: () => {
 						state.failed = false;
 						void loadNext();

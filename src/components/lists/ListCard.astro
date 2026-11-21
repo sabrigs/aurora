@@ -1,13 +1,15 @@
 ---
+import { serverT } from '../../lib/i18n';
 // Card de lista (Home e My lists): miniatura quadrada com os 4 últimos títulos adicionados,
 // e à direita o nome da lista com a quantidade de itens (como as playlists do Spotify).
 // Lista vazia: os 4 espaços ficam como silhueta. Os dados são preenchidos no cliente.
 interface Props {
   kind: 'to_watch' | 'watching' | 'watched' | 'favorites';
-  name: string;
 }
 
-const { kind, name } = Astro.props;
+const { kind } = Astro.props;
+const tr = serverT(Astro.locals);
+const name = tr(`list.${kind}`);
 ---
 
 <a class="list-card" href={`/lists/${kind}`} data-list-kind={kind}>
@@ -19,7 +21,7 @@ const { kind, name } = Astro.props;
   </div>
   <div class="info">
     <h2>{name}</h2>
-    <span class="count" data-count aria-label="Titles in list">0</span>
+    <span class="count" data-count aria-label={tr('list.titlesInList')}>0</span>
   </div>
 </a>
 

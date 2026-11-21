@@ -17,6 +17,7 @@ import {
 import { SERIES_INTERCEPTS } from './series-flows';
 import { WebHaptics } from 'web-haptics';
 import { enableLightDismiss, openPopover } from '../ui/popover';
+import { t } from '../i18n';
 
 // Em telas de toque o feedback é tátil; no desktop (mouse) a lib toca um clique de áudio no lugar.
 const haptics = new WebHaptics({
@@ -36,14 +37,15 @@ const ICONS = {
 
 type Action = (ref: TitleRef, status: Set<SystemKind>) => Promise<void>;
 
+// `label` é a chave do texto: a tradução é resolvida na hora de montar o menu (idioma da página).
 const ACTIONS: Record<string, { label: string; icon: string; run: Action }> = {
-  'remove-to-watch': { icon: ICONS.trash, label: 'Remove from to watch', run: (ref) => removeFromToWatch(ref) },
-  'mark-watching': { icon: ICONS.play, label: 'Mark as watching', run: (ref) => markWatching(ref) },
-  'remove-watching': { icon: ICONS.trash, label: 'Remove from watching', run: (ref) => removeFromWatching(ref) },
-  'mark-watched': { icon: ICONS.check, label: 'Mark as watched', run: (ref) => markWatched(ref) },
-  'mark-favorite': { icon: ICONS.heart, label: 'Mark as favorite', run: (ref, status) => markFavorite(ref, status) },
-  'remove-watched': { icon: ICONS.trash, label: 'Remove from watched', run: (ref) => removeFromWatched(ref) },
-  'remove-favorite': { icon: ICONS.heartBroken, label: 'Remove from favorites', run: (ref) => removeFromFavorites(ref) },
+  'remove-to-watch': { icon: ICONS.trash, label: 'action.removeToWatch', run: (ref) => removeFromToWatch(ref) },
+  'mark-watching': { icon: ICONS.play, label: 'action.markWatching', run: (ref) => markWatching(ref) },
+  'remove-watching': { icon: ICONS.trash, label: 'action.removeWatching', run: (ref) => removeFromWatching(ref) },
+  'mark-watched': { icon: ICONS.check, label: 'action.markWatched', run: (ref) => markWatched(ref) },
+  'mark-favorite': { icon: ICONS.heart, label: 'action.markFavorite', run: (ref, status) => markFavorite(ref, status) },
+  'remove-watched': { icon: ICONS.trash, label: 'action.removeWatched', run: (ref) => removeFromWatched(ref) },
+  'remove-favorite': { icon: ICONS.heartBroken, label: 'action.removeFavorite', run: (ref) => removeFromFavorites(ref) },
 };
 
 // Opções mudam conforme o estado atual do título.
@@ -67,9 +69,9 @@ const menuFor = (status: Set<SystemKind>, mediaType: TitleRef['mediaType']): str
 
 // Lista que aparece no badge: a de status (To watch, Watching, Watched). Favoritos nunca entra.
 const statusLabel = (status: Set<SystemKind>): string | null => {
-  if (status.has('watching')) return 'Watching';
-  if (status.has('watched')) return 'Watched';
-  if (status.has('to_watch')) return 'To watch';
+  if (status.has('watching')) return t('status.watching');
+  if (status.has('watched')) return t('status.watched');
+  if (status.has('to_watch')) return t('status.to_watch');
   return null;
 };
 
@@ -89,8 +91,8 @@ export const initAddStatus = async (root: HTMLElement) => {
   const ref = refFrom(root);
 
   // Rótulos de acessibilidade com o título real (os cards são criados dinamicamente).
-  badge.setAttribute('aria-label', `${ref.title} is in your lists. Open options`);
-  dialog.setAttribute('aria-label', `Options for ${ref.title}`);
+  badge.setAttribute('aria-label', t('action.inLists', { title: ref.title }));
+  dialog.setAttribute('aria-label', t('action.options', { title: ref.title }));
 
   enableLightDismiss(dialog);
 
@@ -122,7 +124,7 @@ export const initAddStatus = async (root: HTMLElement) => {
     const label = statusLabel(status);
     if (label) {
       badgeLabel.textContent = label;
-      badge.setAttribute('aria-label', `${ref.title} is in ${label}. Open options`);
+      badge.setAttribute('aria-label', t('action.inList', { title: ref.title, list: label }));
       measureBadge();
     }
 
@@ -139,7 +141,7 @@ export const initAddStatus = async (root: HTMLElement) => {
         button.type = 'button';
         button.className = 'menu-item';
         button.innerHTML = `${ACTIONS[key].icon}<span></span>`;
-        button.querySelector('span')!.textContent = ACTIONS[key].label;
+        button.querySelector('span')!.textContent = t(ACTIONS[key].label);
         button.addEventListener('click', () => runAction(key, status));
         return button;
       }),

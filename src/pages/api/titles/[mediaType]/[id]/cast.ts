@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ request, params }) => {
 
   try {
     const cast = await getFullCast(mediaType as MediaType, id);
-    return json({ cast }, 200, { 'cache-control': 'private, max-age=3600' });
+    return json({ cast }, 200, { 'cache-control': 'private, max-age=3600', vary: 'cookie' });
   } catch (error) {
     console.error(error);
     return json({ error: 'upstream_error' }, 502);

@@ -1,18 +1,15 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
+import { serverT } from '../../lib/i18n';
 
-const LIST_NAMES: Record<string, string> = {
-	to_watch: 'To watch',
-	watching: 'Watching',
-	watched: 'Watched',
-	favorites: 'Favorites',
-};
+const LIST_KINDS = ['to_watch', 'watching', 'watched', 'favorites'];
+const tr = serverT(Astro.locals);
 
 const kind = Astro.params.kind ?? '';
-if (!(kind in LIST_NAMES)) {
+if (!LIST_KINDS.includes(kind)) {
 	return Astro.redirect('/');
 }
-const name = LIST_NAMES[kind];
+const name = tr(`list.${kind}`);
 ---
 
 <AppLayout fullWidth requireAuth flushTop>
@@ -20,16 +17,16 @@ const name = LIST_NAMES[kind];
 		<h1 class="section-title">{name}</h1>
 
 		<!-- Filtros em chips: streamings do usuário e situação da série. Vários podem ficar marcados. -->
-		<div id="chips" class="chips" role="group" aria-label="Filters" hidden></div>
+		<div id="chips" class="chips" role="group" aria-label={tr('filters.title')} hidden></div>
 
 		<div id="empty-list" class="empty" hidden>
-			<p id="empty-list-text">Nothing here yet.</p>
-			<a id="empty-list-cta" class="cta" href="/">Go to Explore</a>
+			<p id="empty-list-text">{tr('list.empty')}</p>
+			<a id="empty-list-cta" class="cta" href="/">{tr('list.goExplore')}</a>
 		</div>
 
 		<div id="empty-filter" class="empty" hidden>
-			<p>No titles match these filters.</p>
-			<button type="button" class="clear" id="clear-filters">Clear filters</button>
+			<p>{tr('list.noMatch')}</p>
+			<button type="button" class="clear" id="clear-filters">{tr('list.clearFilters')}</button>
 		</div>
 
 		<div id="grid" class="grid" role="list"></div>
@@ -64,6 +61,7 @@ const name = LIST_NAMES[kind];
 		import { readCardSummary, writeCardSummary, type CardSummary } from '../../lib/tmdb/card-cache';
 		import { seriesStatusTag, setCardMeta, setCardProviders, setCardStatus, type SeriesStatusTag } from '../../lib/tmdb/format';
 		import { enableDragScroll } from '../../lib/ui/drag-scroll';
+		import { t } from '../../lib/i18n';
 		import { isReturningVisit, loadScreenState, saveScreenState } from '../../lib/ui/navigation';
 		import { brandName } from '../../lib/streaming/canonical';
 		import { releaseGate } from '../../lib/auth/gate';
@@ -83,8 +81,8 @@ const name = LIST_NAMES[kind];
 		type StatusTone = Exclude<SeriesStatusTag['tone'], 'canceled'>;
 
 		const STATUS_FILTERS: { tone: StatusTone; label: string }[] = [
-			{ tone: 'ongoing', label: 'Ongoing' },
-			{ tone: 'ended', label: 'Ended' },
+			{ tone: 'ongoing', label: t('status.ongoing') },
+			{ tone: 'ended', label: t('status.ended') },
 		];
 
 		// Chips marcados: dentro de cada grupo vale "qualquer um"; entre os grupos, "todos".
@@ -169,8 +167,8 @@ const name = LIST_NAMES[kind];
 			if (total === 0) return null;
 			const count = aired.episodes.filter((episode) => watched.has(episodeKey(episode))).length;
 			const next = aired.episodes.find((episode) => !watched.has(episodeKey(episode)));
-			const upNext = next ? `Next: S${next.seasonNumber}·E${next.episodeNumber}` : 'Up to date';
-			return `${count} of ${total} watched • ${upNext}`;
+			const upNext = next ? t('list.next', { s: next.seasonNumber, e: next.episodeNumber }) : t('list.upToDate');
+			return t('list.progress', { done: count, total, next: upNext });
 		};
 
 		const renderCard = (item: ListItem, index: number) => {
@@ -178,14 +176,22 @@ const name = LIST_NAMES[kind];
 			const cover = node.querySelector<HTMLAnchorElement>('.title-card__cover')!;
 			cover.href = `/title/${item.mediaType}/${item.tmdbId}`;
 			cover.setAttribute('aria-label', item.title);
+			// Título e pôster no idioma da interface: do cache local se já vieram da TMDB; senão, os que ficaram
+			// salvos na lista, trocados assim que o resumo do título chega.
+			const cachedSummary = readCardSummary(item.mediaType, item.tmdbId);
 			const posterImg = node.querySelector<HTMLImageElement>('.title-card__poster')!;
-			const posterSrc = posterUrl(item.posterPath, 'w185');
-			if (posterSrc) {
-				posterImg.src = posterSrc;
-				posterImg.hidden = false;
-			}
-
-			node.querySelector<HTMLElement>('.title-card__title')!.textContent = item.title;
+			const titleEl = node.querySelector<HTMLElement>('.title-card__title')!;
+			const showTitle = (title: string | undefined, posterPath: string | null | undefined) => {
+				const name = title || item.title;
+				titleEl.textContent = name;
+				cover.setAttribute('aria-label', name);
+				const src = posterUrl(posterPath ?? item.posterPath, 'w185');
+				if (src) {
+					if (posterImg.getAttribute('src') !== src) posterImg.src = src;
+					posterImg.hidden = false;
+				}
+			};
+			showTitle(cachedSummary?.title, cachedSummary?.posterPath);
 
 			const meta = node.querySelector<HTMLElement>('.title-card__meta')!;
 			setCardMeta(meta, { mediaType: item.mediaType });
@@ -207,6 +213,7 @@ const name = LIST_NAMES[kind];
 			void loadSummary(item).then((summary) => {
 				setCardBackdrop(node, backdropUrl(summary?.backdropPath ?? null, item.posterPath), eager);
 				if (!summary) return;
+				showTitle(summary.title, summary.posterPath);
 				setCardMeta(meta, { mediaType: item.mediaType, ...summary });
 				setCardStatus(node.querySelector<HTMLElement>('.title-card__status')!, item.mediaType, summary.status);
 				setCardProviders(node.querySelector<HTMLElement>('.title-card__providers')!, summary.providers);
@@ -294,7 +301,7 @@ const name = LIST_NAMES[kind];
 			} catch (error) {
 				console.error(error);
 				emptyList.hidden = false;
-				emptyListText.textContent = 'We could not load this list. Try again later.';
+				emptyListText.textContent = t('list.loadError');
 				emptyListCta.hidden = true;
 			}
 		};

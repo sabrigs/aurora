@@ -1,9 +1,10 @@
 // Cliente da TMDB API (https://developer.themoviedb.org).
 // Usa o "API Read Access Token" (v4), que fica somente no servidor.
 import { TMDB_READ_TOKEN } from 'astro:env/server';
+import { tmdbLanguage } from '../i18n';
+import { requestLang } from '../i18n/request-lang';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
-const LANGUAGE = 'en-US';
 
 export type MediaType = 'movie' | 'tv';
 
@@ -35,7 +36,8 @@ export async function tmdbFetch<T>(
   params: Record<string, QueryValue> = {},
 ): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
-  url.searchParams.set('language', LANGUAGE);
+  // Idioma da interface: a TMDB devolve título, sinopse e gêneros traduzidos quando existem (senão, o original).
+  url.searchParams.set('language', tmdbLanguage(requestLang()));
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));

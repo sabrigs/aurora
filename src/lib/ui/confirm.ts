@@ -2,6 +2,7 @@
 // A ação principal roda dentro do diálogo: ele mostra "busy" enquanto processa e uma mensagem de erro se falhar,
 // sem fechar. Resolve true quando a ação termina e false quando a pessoa cancela.
 import { openPopover } from './popover';
+import { t } from '../i18n';
 
 const DESKTOP_QUERY = '(min-width: 768px)';
 
@@ -47,7 +48,7 @@ export function confirmDialog(options: ConfirmOptions): Promise<boolean> {
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.className = 'confirm-button';
-  cancel.textContent = options.cancelLabel ?? 'Cancel';
+  cancel.textContent = options.cancelLabel ?? t('common.cancel');
   const confirm = document.createElement('button');
   confirm.type = 'button';
   confirm.className = 'confirm-button confirm-button--primary';

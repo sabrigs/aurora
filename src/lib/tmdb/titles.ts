@@ -1,6 +1,7 @@
 // Consultas de filmes e séries usadas pelas telas (Explore, detalhes, backdrop).
 import { getCardProviders, type CardProvider } from '../streaming/availability';
 import { tmdbFetch, type MediaType } from './client';
+import { requestLang } from '../i18n/request-lang';
 
 export interface TitleSummary {
   id: number;
@@ -259,8 +260,15 @@ export async function getTitleDetails(mediaType: MediaType, id: number): Promise
     include_video_language: 'en,null',
   });
 
+  // Sem sinopse traduzida na TMDB, usa a original em inglês (também vinda da API; nada é traduzido à mão).
+  let overview = raw.overview;
+  if (!overview && requestLang() !== 'en') {
+    overview = (await tmdbFetch<{ overview: string }>(`/${mediaType}/${id}`, { language: 'en-US' }).catch(() => null))?.overview ?? '';
+  }
+
   return {
     ...toSummary(raw, mediaType),
+    overview,
     genres: raw.genres.map((genre) => genre.name),
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     imdbId: raw.external_ids?.imdb_id ?? raw.imdb_id ?? null,

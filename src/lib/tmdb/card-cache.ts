@@ -1,6 +1,11 @@
+import { currentLang } from '../i18n';
+
 // Cache local (localStorage) dos dados dos cards: backdrop, nota, duração, anos etc. Esses dados mudam
 // pouco, então as telas pintam o card na hora, sem esperar a API, e só buscam o que falta.
 export interface CardSummary {
+  // Título e pôster no idioma da interface.
+  title?: string;
+  posterPath?: string | null;
   backdropPath: string | null;
   voteAverage: number;
   runtime: number | null;
@@ -13,10 +18,11 @@ export interface CardSummary {
   providers: { name: string; logoPath: string | null }[];
 }
 
-const PREFIX = 'aurora:card:v2:';
+// O idioma entra na chave: título, pôster e gênero mudam com ele.
+const prefix = () => `aurora:card:v3:${currentLang()}:`;
 const TTL_MS = 24 * 60 * 60 * 1000;
 
-const keyFor = (mediaType: string, id: number) => `${PREFIX}${mediaType}:${id}`;
+const keyFor = (mediaType: string, id: number) => `${prefix()}${mediaType}:${id}`;
 
 export function readCardSummary(mediaType: string, id: number): CardSummary | null {
   try {

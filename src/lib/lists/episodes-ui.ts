@@ -3,6 +3,7 @@
 import { apiFetch } from '../api';
 import { posterUrl } from '../tmdb/images';
 import { formatRuntime } from '../tmdb/format';
+import { currentLang, localeOf, t } from '../i18n';
 import {
   episodeKey,
   getWatchedEpisodes,
@@ -25,7 +26,7 @@ interface Episode {
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 const formatDate = (date: string) =>
-  new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
+  new Date(`${date}T00:00:00Z`).toLocaleDateString(localeOf(currentLang()), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -111,9 +112,9 @@ export function initEpisodes(root: HTMLElement) {
 
     progressLabel.textContent = complete
       ? ended || implicitAll
-        ? 'All watched'
-        : 'Up to date'
-      : `${count} of ${airedTotal} watched`;
+        ? t('ep.allWatched')
+        : t('ep.upToDate')
+      : t('ep.watchedCount', { count, total: airedTotal });
     progressFill.style.width = `${percent}%`;
     progressBar.setAttribute('aria-valuenow', String(percent));
   };
@@ -139,7 +140,7 @@ export function initEpisodes(root: HTMLElement) {
 
     const seasonButton = details.querySelector<HTMLButtonElement>('[data-mark-season]')!;
     seasonButton.hidden = implicitAll || aired.length === 0;
-    seasonButton.textContent = allWatched ? 'Unmark season' : 'Mark season as watched';
+    seasonButton.textContent = allWatched ? t('ep.unmarkSeason') : t('ep.markSeason');
 
     list.replaceChildren(
       ...episodes.map((episode) => {
@@ -155,7 +156,7 @@ export function initEpisodes(root: HTMLElement) {
         input.type = 'checkbox';
         input.checked = checked;
         input.disabled = implicitAll || !available;
-        input.setAttribute('aria-label', `Season ${seasonNumber}, episode ${episode.episodeNumber}: ${episode.name}`);
+        input.setAttribute('aria-label', t('ep.checkAria', { s: seasonNumber, e: episode.episodeNumber, name: episode.name }));
         input.addEventListener('change', () => {
           void toggleEpisode(seasonNumber, episode.episodeNumber, input.checked);
         });
@@ -183,7 +184,11 @@ export function initEpisodes(root: HTMLElement) {
         const meta = document.createElement('p');
         meta.className = 'episode-meta';
         meta.textContent = [
-          episode.airDate ? (available ? formatDate(episode.airDate) : `Airs ${formatDate(episode.airDate)}`) : 'Date to be announced',
+          episode.airDate
+            ? available
+              ? formatDate(episode.airDate)
+              : t('ep.airs', { date: formatDate(episode.airDate) })
+            : t('ep.dateTba'),
           formatRuntime(episode.runtime),
         ]
           .filter(Boolean)
@@ -232,7 +237,7 @@ export function initEpisodes(root: HTMLElement) {
         console.error(error);
         watched = new Set(await getWatchedEpisodes(ref.tmdbId).catch(() => watched));
         renderAll();
-        showNote("Couldn't save your progress. Try again.");
+        showNote(t('ep.saveError'));
       }
     });
 
@@ -259,12 +264,12 @@ export function initEpisodes(root: HTMLElement) {
       }
       const status = details.querySelector<HTMLElement>('[data-loading]')!;
       status.hidden = false;
-      status.textContent = 'Loading episodes…';
+      status.textContent = t('ep.loading');
       loadSeason(seasonNumber).then(
         () => renderSeasonBody(details),
         (error) => {
           console.error(error);
-          status.textContent = "Couldn't load the episodes. Close and open the season to try again.";
+          status.textContent = t('ep.loadClose');
         },
       );
     });
@@ -274,7 +279,7 @@ export function initEpisodes(root: HTMLElement) {
       toggleSeason(details)
         .catch((error) => {
           console.error(error);
-          showNote("Couldn't load the episodes. Try again.");
+          showNote(t('ep.loadError'));
         })
         .finally(() => (button.disabled = false));
     });
@@ -286,7 +291,7 @@ export function initEpisodes(root: HTMLElement) {
     watched = new Set(set);
     implicitAll = watched.size === 0 && status.has('watched');
     root.classList.toggle('is-readonly', implicitAll);
-    showNote(implicitAll ? 'You marked this series as watched.' : null);
+    showNote(implicitAll ? t('ep.markedSeries') : null);
     renderAll();
 
     if (implicitAll) await materializeWatched();

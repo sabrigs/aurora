@@ -8,3 +8,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare namespace App {
+  interface Locals {
+    // Idioma da interface (cookie aurora_lang).
+    lang: import('./lib/i18n').Lang;
+  }
+}

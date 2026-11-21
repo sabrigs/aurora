@@ -3,6 +3,9 @@ import { supabase } from '../supabase.js';
 import { getListSummaries, LISTS_CHANGED_EVENT, peekListSummaries, type ListSummary } from './store';
 import { posterUrl } from '../tmdb/images';
 import { releaseGate, rememberOnboarded } from '../auth/gate';
+import { apiFetch } from '../api';
+import { currentLang } from '../i18n';
+import { readCardSummary, writeCardSummary, type CardSummary } from '../tmdb/card-cache';
 
 // Depois que o onboarding é concluído, não muda mais nesta aba: não precisa consultar de novo.
 let onboardingDone = false;
@@ -39,6 +42,36 @@ const redirectIfNeeded = async () => {
   return true;
 };
 
+// Pôster no idioma da interface. Em inglês vale o que ficou salvo na lista; em outro idioma, o pôster vem da TMDB
+// (cache local primeiro). Se não houver pôster traduzido, fica o que está salvo; nada é trocado à mão.
+const applyPoster = (slot: HTMLElement, posterPath: string | null) => {
+  const poster = posterUrl(posterPath, 'w185');
+  slot.classList.remove('poster--loading');
+  if (poster) {
+    slot.classList.remove('poster--silhouette');
+    slot.style.backgroundImage = `url("${poster}")`;
+  } else {
+    slot.style.backgroundImage = '';
+    slot.classList.add('poster--silhouette');
+  }
+};
+
+const localizePoster = (slot: HTMLElement, item: ListSummary['recent'][number]) => {
+  const cached = readCardSummary(item.mediaType, item.tmdbId);
+  if (cached) {
+    if (cached.posterPath) applyPoster(slot, cached.posterPath);
+    return;
+  }
+  void apiFetch(`/api/titles/${item.mediaType}/${item.tmdbId}`)
+    .then((response) => (response.ok ? (response.json() as Promise<CardSummary>) : null))
+    .then((summary) => {
+      if (!summary) return;
+      writeCardSummary(item.mediaType, item.tmdbId, summary);
+      if (summary.posterPath) applyPoster(slot, summary.posterPath);
+    })
+    .catch(() => {});
+};
+
 // Preenche um card: contador e miniatura 2x2 (o mais recente fica no topo à esquerda).
 const renderCard = (summary: ListSummary) => {
   const card = document.querySelector<HTMLElement>(`[data-list-kind="${summary.kind}"]`);
@@ -47,16 +80,9 @@ const renderCard = (summary: ListSummary) => {
   card.querySelector<HTMLElement>('[data-count]')!.textContent = String(summary.count);
 
   card.querySelectorAll<HTMLElement>('[data-poster]').forEach((slot, index) => {
-    const poster = posterUrl(summary.recent[index]?.posterPath ?? null, 'w185');
-
-    slot.classList.remove('poster--loading');
-    if (poster) {
-      slot.classList.remove('poster--silhouette');
-      slot.style.backgroundImage = `url("${poster}")`;
-    } else {
-      slot.style.backgroundImage = '';
-      slot.classList.add('poster--silhouette');
-    }
+    const item = summary.recent[index];
+    applyPoster(slot, item?.posterPath ?? null);
+    if (item && currentLang() !== 'en') localizePoster(slot, item);
   });
 };
 

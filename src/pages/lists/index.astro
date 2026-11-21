@@ -1,16 +1,19 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import ListCard from '../../components/lists/ListCard.astro';
+import { serverT } from '../../lib/i18n';
+
+const tr = serverT(Astro.locals);
 ---
 
 <AppLayout fullWidth requireAuth flushTop>
 	<section class="all-lists">
-		<h1 class="section-title">My lists</h1>
+		<h1 class="section-title">{tr('home.myLists')}</h1>
 		<div class="cards">
-			<ListCard kind="to_watch" name="To watch" />
-			<ListCard kind="watching" name="Watching" />
-			<ListCard kind="favorites" name="Favorites" />
-			<ListCard kind="watched" name="Watched" />
+			<ListCard kind="to_watch" />
+			<ListCard kind="watching" />
+			<ListCard kind="favorites" />
+			<ListCard kind="watched" />
 		</div>
 	</section>
 

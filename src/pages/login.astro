@@ -2,9 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/ui/Button.astro';
 import InputField from '../components/ui/InputField.astro';
+import { serverT } from '../lib/i18n';
 import { getRandomBackdrop } from '../lib/tmdb/titles';
 
 // Backdrop aleatório da TMDB; sem token ou com erro, usa a imagem estática.
+const tr = serverT(Astro.locals);
 const FALLBACK_BACKDROP = '/background.webp';
 const backdropPath = await getRandomBackdrop().catch(() => null);
 const backdrop = backdropPath
@@ -19,30 +21,30 @@ const backdrop = backdropPath
 				<div id="panel">
 					<form id="login-form" novalidate>
 						<h1 class="brand">Aurora</h1>
-						<p class="caption">Take your movies and TV shows to whatever you go.</p>
+						<p class="caption">{tr('login.caption')}</p>
 
 						<div class="field">
-							<InputField id="input-email" type="email" autocomplete="email" name="email" placeholder="Email" required aria-label="Email" aria-describedby="email-error" />
+							<InputField id="input-email" type="email" autocomplete="email" name="email" placeholder={tr('login.email')} required aria-label={tr('login.email')} aria-describedby="email-error" />
 							<p id="email-error" class="error" role="alert" hidden></p>
 						</div>
 
-						<Button id="submit-button" type="submit" label="Continue with email" />
+						<Button id="submit-button" type="submit" label={tr('login.continue')} />
 					</form>
 
 					<div id="sent" class="sent" hidden>
-						<h1 class="sent-title">Check your email</h1>
-						<p class="sent-text">To continue, click in the link sent to</p>
+						<h1 class="sent-title">{tr('login.check')}</h1>
+						<p class="sent-text">{tr('login.clickLink')}</p>
 						<p class="sent-email"><strong id="sent-email"></strong></p>
 
 						<form id="code-form" class="code-form" novalidate>
-							<p class="sent-text">Using the installed app? Enter the code from the email instead.</p>
+							<p class="sent-text">{tr('login.installed')}</p>
 							<div class="field">
-								<InputField id="input-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Code" aria-label="Code from email" aria-describedby="code-error" />
+								<InputField id="input-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder={tr('login.code')} aria-label={tr('login.codeAria')} aria-describedby="code-error" />
 								<p id="code-error" class="error" role="alert" hidden></p>
 							</div>
-							<Button id="code-button" type="submit" label="Verify code" class="pill" />
+							<Button id="code-button" type="submit" label={tr('login.verify')} class="pill" />
 						</form>
-						<p class="sent-retry">Not finding the email? <button type="button" id="change-email" class="link">Try again</button></p>
+						<p class="sent-retry">{tr('login.notFinding')} <button type="button" id="change-email" class="link">{tr('common.tryAgain')}</button></p>
 					</div>
 				</div>
 			</section>
@@ -52,6 +54,7 @@ const backdrop = backdropPath
 
 	<script>
 		import { supabase } from '../lib/supabase.js';
+		import { t } from '../lib/i18n';
 
 		const form = document.getElementById('login-form') as HTMLFormElement;
 		const emailInput = document.getElementById('input-email') as HTMLInputElement;
@@ -75,7 +78,7 @@ const backdrop = backdropPath
 
 		const setSending = (sending: boolean) => {
 			submitButton.disabled = sending;
-			submitButton.textContent = sending ? 'Sending...' : 'Continue with email';
+			submitButton.textContent = sending ? t('login.sending') : t('login.continue');
 		};
 
 		form.addEventListener('submit', async (event) => {
@@ -84,7 +87,7 @@ const backdrop = backdropPath
 
 			const email = emailInput.value.trim();
 			if (!emailInput.checkValidity() || !email) {
-				showError('Enter a valid email address.');
+				showError(t('login.invalidEmail'));
 				return;
 			}
 
@@ -96,7 +99,7 @@ const backdrop = backdropPath
 			setSending(false);
 
 			if (error) {
-				showError('We could not send the link. Try again in a moment.');
+				showError(t('login.sendError'));
 				console.error(error);
 				return;
 			}
@@ -118,7 +121,7 @@ const backdrop = backdropPath
 			codeError.hidden = true;
 			const token = codeInput.value.replace(/\s/g, '');
 			if (!/^\d{6,8}$/.test(token)) {
-				codeError.textContent = 'Enter the code from the email.';
+				codeError.textContent = t('login.enterCode');
 				codeError.hidden = false;
 				return;
 			}
@@ -132,7 +135,7 @@ const backdrop = backdropPath
 			codeButton.disabled = false;
 
 			if (error) {
-				codeError.textContent = 'Invalid or expired code. Try again.';
+				codeError.textContent = t('login.invalidCode');
 				codeError.hidden = false;
 				return;
 			}

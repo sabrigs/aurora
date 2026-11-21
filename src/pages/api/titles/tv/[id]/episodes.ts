@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ request, params }) => {
   }
 
   try {
-    return json(await getAiredEpisodes(id), 200, { 'cache-control': 'private, max-age=3600' });
+    return json(await getAiredEpisodes(id), 200, { 'cache-control': 'private, max-age=3600', vary: 'cookie' });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('TMDB 404')) {
       return json({ error: 'not_found' }, 404);

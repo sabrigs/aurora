@@ -1,13 +1,16 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import { versions } from '../data/changelog';
+import { localeOf, serverT, toLang } from '../lib/i18n';
+
+const tr = serverT(Astro.locals);
 ---
 
 <AppLayout fullWidth>
 	<article class="changelog">
 		<header class="page-head">
-			<h1>Changelog</h1>
-			<p>New features, improvements and fixes in Aurora.</p>
+			<h1>{tr('changelog.title')}</h1>
+			<p>{tr('changelog.subtitle')}</p>
 		</header>
 
 		{versions.map((release) => (
@@ -15,7 +18,7 @@ import { versions } from '../data/changelog';
 				<div class="meta">
 					<h2 id={`release-${release.version}`}>{release.version}</h2>
 					<time datetime={release.date}>
-						{new Date(`${release.date}T12:00:00`).toLocaleDateString('en-US', {
+						{new Date(`${release.date}T12:00:00`).toLocaleDateString(localeOf(toLang(Astro.locals.lang)), {
 							month: 'long',
 							day: 'numeric',
 							year: 'numeric',

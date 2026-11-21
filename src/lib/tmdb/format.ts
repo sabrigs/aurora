@@ -1,4 +1,5 @@
 import { logoUrl } from './images';
+import { currentLang, t, type Lang } from '../i18n';
 
 // Texto das informações dos cards: Movie, 2024, 2h 15min / Action, ★ 7.5.
 export const formatRuntime = (minutes: number | null | undefined) => {
@@ -29,12 +30,14 @@ export const formatYears = (info: Pick<CardInfo, 'mediaType' | 'year' | 'lastSea
 
 // Informações do card em duas linhas:
 //   1) categoria, ano, (temporadas) e duração   2) gênero e nota.
-export const cardMetaRows = (info: CardInfo): string[][] =>
+export const cardMetaRows = (info: CardInfo, lang: Lang = currentLang()): string[][] =>
   [
     [
-      info.mediaType === 'movie' ? 'Movie' : 'Series',
+      info.mediaType === 'movie' ? t('card.movie', undefined, lang) : t('card.series', undefined, lang),
       formatYears(info),
-      info.mediaType === 'tv' && info.seasons ? `${info.seasons} ${info.seasons === 1 ? 'season' : 'seasons'}` : null,
+      info.mediaType === 'tv' && info.seasons
+        ? t(info.seasons === 1 ? 'card.season' : 'card.seasons', { n: info.seasons }, lang)
+        : null,
       // Duração só para filmes: em séries o que importa são as temporadas.
       info.mediaType === 'movie' ? formatRuntime(info.runtime) : null,
     ],
@@ -46,8 +49,9 @@ export const cardMetaRows = (info: CardInfo): string[][] =>
 // Cada linha vira um <span class="title-card__meta-row"> e cada informação um <span>;
 // o espaçamento é feito por gap no CSS.
 export const setCardMeta = (element: HTMLElement, info: CardInfo) => {
+  const lang = currentLang();
   element.replaceChildren(
-    ...cardMetaRows(info).map((row) => {
+    ...cardMetaRows(info, lang).map((row) => {
       const line = document.createElement('span');
       line.className = 'title-card__meta-row';
       line.replaceChildren(
@@ -68,16 +72,20 @@ export interface SeriesStatusTag {
 }
 
 // Situação da série para as tags (página do título e cards). Filmes e situações sem tag devolvem null.
-export const seriesStatusTag = (mediaType: 'movie' | 'tv', status: string | null | undefined): SeriesStatusTag | null => {
+export const seriesStatusTag = (
+  mediaType: 'movie' | 'tv',
+  status: string | null | undefined,
+  lang: Lang = currentLang(),
+): SeriesStatusTag | null => {
   if (mediaType !== 'tv') return null;
   switch (status) {
     case 'Returning Series':
     case 'In Production':
-      return { label: 'Ongoing', tone: 'ongoing' };
+      return { label: t('status.ongoing', undefined, lang), tone: 'ongoing' };
     case 'Ended':
-      return { label: 'Ended', tone: 'ended' };
+      return { label: t('status.ended', undefined, lang), tone: 'ended' };
     case 'Canceled':
-      return { label: 'Canceled', tone: 'canceled' };
+      return { label: t('status.canceled', undefined, lang), tone: 'canceled' };
     default:
       return null;
   }
@@ -129,7 +137,7 @@ export const setCardProviders = (element: HTMLElement, providers: CardProviderLo
           Object.assign(document.createElement('span'), {
             className: 'title-card__provider title-card__provider--more',
             textContent: '+',
-            ariaLabel: 'More streamings',
+            ariaLabel: t('card.moreStreamings'),
           }),
         ]
       : []),

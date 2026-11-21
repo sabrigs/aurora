@@ -6,7 +6,8 @@ import { getCardProviders, getTitleStreamingProviders } from '../../lib/streamin
 const json = (body: unknown, status = 200, cacheControl = 'no-store') =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json', 'cache-control': cacheControl },
+    // vary: cookie — o conteúdo muda com o idioma (cookie aurora_lang), então o cache do navegador não pode misturar.
+    headers: { 'content-type': 'application/json', 'cache-control': cacheControl, vary: 'cookie' },
   });
 
 // Feed do Explore (trending) e busca, paginados para o scroll infinito.

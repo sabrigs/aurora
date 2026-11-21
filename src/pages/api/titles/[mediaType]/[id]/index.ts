@@ -26,6 +26,8 @@ export const GET: APIRoute = async ({ request, params }) => {
     ]);
     return new Response(
       JSON.stringify({
+        // Título e pôster já no idioma da interface (quando a TMDB tem tradução).
+        title: details.title,
         backdropPath: details.backdropPath,
         posterPath: details.posterPath,
         voteAverage: details.voteAverage,
@@ -41,6 +43,7 @@ export const GET: APIRoute = async ({ request, params }) => {
         headers: {
           'content-type': 'application/json',
           'cache-control': 'private, max-age=600',
+          vary: 'cookie',
         },
       },
     );

@@ -2,6 +2,7 @@
 // Seção "Episodes" da página de uma série: progresso geral e um acordeão por temporada.
 // Os episódios de cada temporada são carregados ao abrir; o progresso vem do Supabase no cliente.
 import type { SeasonSummary } from '../../lib/tmdb/episodes';
+import { serverT } from '../../lib/i18n';
 
 interface Props {
   tmdbId: number;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
+const tr = serverT(Astro.locals);
 ---
 
 <section
@@ -26,10 +28,10 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
   data-ended={ended ? 'true' : 'false'}
 >
   <div class="episodes-head">
-    <h2 id="episodes">Episodes</h2>
+    <h2 id="episodes">{tr('ep.title')}</h2>
     <span class="episodes-label" data-progress-label aria-live="polite"></span>
   </div>
-  <div class="episodes-progress" role="progressbar" aria-label="Series progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progress-bar>
+  <div class="episodes-progress" role="progressbar" aria-label={tr('ep.progressAria')} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progress-bar>
     <span data-progress-fill></span>
   </div>
   <p class="episodes-note" data-note hidden></p>
@@ -38,12 +40,12 @@ const { tmdbId, title, posterPath, seasons, airedTotal, ended } = Astro.props;
     {seasons.map((season) => (
       <details class="season" data-season={season.seasonNumber} data-episode-count={season.episodeCount}>
         <summary>
-          <span class="season-name">Season {season.seasonNumber}</span>
+          <span class="season-name">{tr('ep.season', { n: season.seasonNumber })}</span>
           <span class="season-progress" data-season-progress>0/{season.episodeCount}</span>
           <svg class="season-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </summary>
         <div class="season-body">
-          <button type="button" class="season-action" data-mark-season hidden>Mark season as watched</button>
+          <button type="button" class="season-action" data-mark-season hidden>{tr('ep.markSeason')}</button>
           <p class="season-loading" data-loading hidden></p>
           <ul class="episode-list" data-list></ul>
         </div>

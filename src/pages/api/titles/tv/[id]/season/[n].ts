@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ request, params }) => {
 
   try {
     const episodes = await getSeasonEpisodes(id, seasonNumber);
-    return json({ episodes }, 200, { 'cache-control': 'private, max-age=3600' });
+    return json({ episodes }, 200, { 'cache-control': 'private, max-age=3600', vary: 'cookie' });
   } catch (error) {
     // A TMDB responde 404 para série ou temporada que não existe.
     if (error instanceof Error && error.message.startsWith('TMDB 404')) {
